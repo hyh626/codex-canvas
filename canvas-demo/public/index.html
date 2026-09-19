@@ -30,7 +30,8 @@
         <div class="guide">
           <b>Try the loop</b>
           <ol>
-            <li>Edit the title on the right.</li>
+            <li>Double-click a card title to edit.</li>
+            <li>Duplicate, reorder, or delete a card.</li>
             <li>Ask the mock agent to change its color.</li>
             <li>Undo, then inspect the event.</li>
             <li>Reload: the model stays.</li>
@@ -46,7 +47,14 @@
             <div class="eyebrow">LIVE CANVAS</div>
             <h2>Your model, made visible.</h2>
           </div>
-          <span class="pill">● Model → UI</span>
+          <button id="newCard" class="primary">＋ New card</button>
+        </div>
+        <div class="card-toolbar" aria-label="Component actions">
+          <button id="duplicate">Duplicate</button
+          ><button id="moveEarlier">← Move earlier</button
+          ><button id="moveLater">Move later →</button
+          ><button id="deleteCard">Delete</button>
+          <span class="small">Double-click a title or body to edit it.</span>
         </div>
         <div id="canvas" aria-label="Canvas components"></div>
         <section class="composer">
@@ -118,6 +126,7 @@
           placeholder="Give feedback for the next agent turn"
         ></textarea
         ><button id="addComment">Add comment</button>
+        <div id="comments" aria-label="Component comments"></div>
         <details open>
           <summary>Data model</summary>
           <pre id="model"></pre>
@@ -128,6 +137,19 @@
         </details>
       </aside>
     </main>
+    <dialog id="inlineEdit" aria-labelledby="inlineLabel">
+      <form id="inlineForm">
+        <h2 id="inlineLabel">Edit component</h2>
+        <p id="inlineContext" class="small"></p>
+        <label for="inlineText">Text</label
+        ><textarea id="inlineText" rows="5"></textarea>
+        <p id="inlineError" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="cancelInline" type="button">Cancel</button
+          ><button class="primary" type="submit">Commit edit</button>
+        </div>
+      </form>
+    </dialog>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

@@ -4,7 +4,8 @@ let view,
   selected = "welcome",
   editRevision,
   dirty = false,
-  running = false;
+  running = false,
+  inlineTarget = null;
 const status = (text, error = false) => {
   $("status").textContent = text;
   $("status").className = error ? "error" : "";
@@ -40,6 +41,14 @@ function render(next) {
   );
   $("undo").disabled = !view.canUndo;
   $("redo").disabled = !view.canRedo;
+  const selectedIndex = view.state.components.findIndex(
+    (c) => c.id === selected,
+  );
+  $("moveEarlier").disabled = selectedIndex === 0;
+  $("moveLater").disabled = selectedIndex === view.state.components.length - 1;
+  $("deleteCard").disabled = view.state.components.length === 1;
+  $("newCard").disabled = $("duplicate").disabled =
+    view.state.components.length >= 8;
   $("model").textContent = JSON.stringify(
     { revision: view.revision, ...view.state },
     null,
@@ -50,6 +59,7 @@ function render(next) {
   for (const c of view.state.components) {
     const choose = () => {
       if (dirty && !confirm("Discard your uncommitted edit?")) return;
+      if (selected === c.id) return;
       selected = c.id;
       dirty = false;
       render(view);
@@ -73,9 +83,25 @@ function render(next) {
     const body = document.createElement("p");
     body.dataset.nodeId = "body";
     body.textContent = c.body;
+    for (const [element, nodeId] of [
+      [title, "title"],
+      [body, "body"],
+    ]) {
+      element.ondblclick = (event) => {
+        event.stopPropagation();
+        openInline(c, nodeId);
+      };
+      element.title = "Double-click to edit";
+    }
+    const editButton = document.createElement("button");
+    editButton.textContent = "Edit text";
+    editButton.onclick = (event) => {
+      event.stopPropagation();
+      openInline(c, "body");
+    };
     const footer = document.createElement("small");
     footer.textContent = c.id.toUpperCase() + " / SHARED COMPONENT";
-    card.append(marker, title, body, footer);
+    card.append(marker, title, body, footer, editButton);
     card.onclick = choose;
     card.onkeydown = (e) => {
       if (e.key === "Enter") choose();
@@ -100,15 +126,98 @@ function render(next) {
     };
     $("events").append(row);
   }
+  $("comments").replaceChildren();
+  const comments = view.events.filter(
+    (e) => e.type === "comment.created" && e.payload.component_id === selected,
+  );
+  if (!comments.length)
+    $("comments").textContent = "No comments on this component yet.";
+  for (const event of comments) {
+    const item = document.createElement("article");
+    item.className = "comment-item";
+    const anchor = document.createElement("small");
+    anchor.textContent = `${event.payload.node_id} · anchored at r${event.payload.revision}`;
+    const text = document.createElement("p");
+    text.textContent = event.payload.text;
+    const use = document.createElement("button");
+    use.textContent = "Use as agent instruction";
+    use.onclick = () => {
+      $("prompt").value = event.payload.text;
+      $("prompt").focus();
+      status("Comment copied into the agent prompt. Review it, then run.");
+    };
+    item.append(anchor, text, use);
+    $("comments").append(item);
+  }
   if (!dirty) fillEditor();
 }
 async function act(fn, message) {
   try {
-    await fn();
+    if ((await fn()) === false) return;
     status(message);
   } catch (e) {
     status(e.message, true);
   }
+}
+function discardDraft() {
+  if (dirty && !confirm("Discard your uncommitted inspector edit?"))
+    return false;
+  dirty = false;
+  return true;
+}
+function openInline(card, nodeId) {
+  if (!discardDraft()) return;
+  selected = card.id;
+  render(view);
+  inlineTarget = { componentId: card.id, nodeId, baseRevision: view.revision };
+  $("inlineLabel").textContent = `Edit ${nodeId}`;
+  $("inlineContext").textContent =
+    `${card.id} · revision ${view.revision}. Later changes will cause a conflict.`;
+  $("inlineText").value = card[nodeId];
+  $("inlineText").maxLength = nodeId === "title" ? 120 : 2000;
+  $("inlineError").textContent = "";
+  $("inlineEdit").showModal();
+  $("inlineText").focus();
+}
+$("cancelInline").onclick = () => $("inlineEdit").close();
+$("inlineForm").onsubmit = async (event) => {
+  event.preventDefault();
+  try {
+    const next = await api("component", {
+      operation: "set_text",
+      ...inlineTarget,
+      text: $("inlineText").value,
+    });
+    $("inlineEdit").close();
+    render(next);
+    status("Canvas text committed with a node-level diff.");
+  } catch (error) {
+    $("inlineError").textContent = error.message;
+  }
+};
+for (const [id, operation, direction] of [
+  ["newCard", "create"],
+  ["duplicate", "duplicate"],
+  ["deleteCard", "delete"],
+  ["moveEarlier", "move", -1],
+  ["moveLater", "move", 1],
+]) {
+  $(id).onclick = () =>
+    act(async () => {
+      if (!discardDraft()) return false;
+      const next = await api("component", {
+        operation,
+        direction,
+        componentId: selected,
+        baseRevision: view.revision,
+      });
+      if (
+        next.selectedComponentId &&
+        next.state.components.some((c) => c.id === next.selectedComponentId)
+      )
+        selected = next.selectedComponentId;
+      render(next);
+    }, `${operation} committed. Undo restores the previous state.`);
 }
 $("editor").oninput = () => {
   dirty = true;
@@ -146,6 +255,7 @@ document.onkeydown = (e) => {
   if (
     (e.ctrlKey || e.metaKey) &&
     e.key.toLowerCase() === "z" &&
+    !$("inlineEdit").open &&
     !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)
   ) {
     e.preventDefault();

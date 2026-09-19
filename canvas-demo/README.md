@@ -21,6 +21,8 @@ npm test
 5. Click an event to inspect its raw payload. Export the trajectory; it includes all blobs.
 6. Restart the server or open a second browser tab: both render the committed model.
 
+More journeys: create/duplicate cards, direct canvas text editing, reorder, delete/restore, comment-to-agent handoff, and stale-draft conflict handling. Follow the [nine-step CUJ guide (中文)](CUJ.zh-CN.md).
+
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot
@@ -102,6 +104,7 @@ requires real authentication, tenant isolation and a database before exposing th
 ## Implementation map and acceptance
 
 - `store.mjs`: schema checks, single writer, snapshots, events, replay, undo, request assertions.
+- `commands.mjs`: persistent, idempotent create/duplicate/delete/move/text commands.
 - `server.mjs`: loopback HTTP API, session token, origin checks and live SSE updates.
 - `public/`: dependency-free canvas, inspector, comments, trajectory and engine selection.
 - `codex.mjs`: replaceable app-server adapter.
@@ -109,7 +112,7 @@ requires real authentication, tenant isolation and a database before exposing th
 - `test/`: restart/replay, stale write rejection, retries, undo/redo, blob tampering,
   exact archive roundtrip, HTTP loop, and fake app-server protocol coverage.
 
-11 Node integration/unit tests passed in this environment. The generated component HTML has
+15 Node integration/unit tests passed in this environment. The generated component HTML has
 an exact snapshot assertion. Full browser automation was blocked by the cloud browser's local
 URL restriction; Electron and live provider requests were not run. No upstream Rust files were
 changed. Repository-wide `just fmt` was attempted but cannot complete here because Cargo
