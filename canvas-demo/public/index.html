@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Canvas / shared model</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/"
+        >◈ <strong>Canvas</strong><span>LAB / 001</span></a
+      >
+      <div class="header-right">
+        <span id="connection">Connecting…</span><span id="revision">r0</span
+        ><button id="undo" title="Ctrl/Cmd-Z">↶ Undo</button
+        ><button id="redo" title="Ctrl/Cmd-Shift-Z">↷ Redo</button
+        ><a class="button" href="/api/export">Export trajectory ↗</a>
+      </div>
+    </header>
+    <main>
+      <aside>
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>A shared<br />place to think.</h1>
+        <p class="muted">
+          Edit a card. Ask the agent.<br />Every change meets in one model.
+        </p>
+        <div class="section-label">COMPONENTS <span id="count">01</span></div>
+        <nav id="components"></nav>
+        <div class="guide">
+          <b>Try the loop</b>
+          <ol>
+            <li>Edit the title on the right.</li>
+            <li>Ask the mock agent to change its color.</li>
+            <li>Undo, then inspect the event.</li>
+            <li>Reload: the model stays.</li>
+          </ol>
+        </div>
+        <p class="footnote">
+          Local demo · single writer<br />HTML is a generated view in this MVP.
+        </p>
+      </aside>
+      <section class="workspace">
+        <div class="canvas-heading">
+          <div>
+            <div class="eyebrow">LIVE CANVAS</div>
+            <h2>Your model, made visible.</h2>
+          </div>
+          <span class="pill">● Model → UI</span>
+        </div>
+        <div id="canvas" aria-label="Canvas components"></div>
+        <section class="composer">
+          <div class="composer-top">
+            <label for="engine">Agent</label
+            ><select id="engine">
+              <option value="mock">Deterministic mock</option>
+              <option value="codex" disabled>
+                Codex · requires provider setup
+              </option></select
+            ><span id="audit" class="pill">assert = true · mock request</span>
+          </div>
+          <label class="sr-only" for="prompt">Agent instruction</label
+          ><textarea
+            id="prompt"
+            placeholder="Try: 标题：一起把想法变成作品"
+            rows="2"
+          ></textarea>
+          <div class="composer-bottom">
+            <div class="presets">
+              <button data-prompt="change color">Change color</button
+              ><button data-prompt="add card">Add card</button>
+            </div>
+            <label class="capture"
+              ><input type="checkbox" id="capture" /> Capture full
+              request</label
+            ><button id="run" class="primary">Run agent ↗</button>
+          </div>
+          <p id="agentNote" class="small">
+            Mock recognizes title text, “change color”, and “add card”. No model
+            API call.
+          </p>
+        </section>
+        <p id="status" role="status">Loading workspace…</p>
+        <section class="timeline">
+          <div class="section-label">TRAJECTORY <span>APPEND ONLY</span></div>
+          <div id="events"></div>
+        </section>
+      </section>
+      <aside class="inspector">
+        <div class="eyebrow">INSPECTOR</div>
+        <h2 id="selected">welcome</h2>
+        <form id="editor">
+          <label for="title">Title</label
+          ><input id="title" maxlength="120" required /><label for="body"
+            >Body</label
+          ><textarea id="body" rows="4" maxlength="2000"></textarea
+          ><label for="color">Accent</label
+          ><input type="color" id="color" /><button
+            class="primary"
+            type="submit"
+          >
+            Commit edit
+          </button>
+          <p class="small">
+            Edits become one undoable transaction.<br />Typing stays local until
+            committed.
+          </p>
+        </form>
+        <hr />
+        <label for="comment">Comment on this component</label
+        ><select id="anchor">
+          <option value="title">Title node</option>
+          <option value="body">Body node</option></select
+        ><textarea
+          id="comment"
+          rows="2"
+          maxlength="2000"
+          placeholder="Give feedback for the next agent turn"
+        ></textarea
+        ><button id="addComment">Add comment</button>
+        <details open>
+          <summary>Data model</summary>
+          <pre id="model"></pre>
+        </details>
+        <details>
+          <summary>Selected event</summary>
+          <pre id="event"></pre>
+        </details>
+      </aside>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
