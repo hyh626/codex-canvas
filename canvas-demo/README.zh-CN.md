@@ -14,6 +14,10 @@ npm start
 
 验证：`npm test`。可选 Electron 壳见英文 README；macOS/Windows 安装包尚未制作。
 
+## 更多可体验流程
+
+见 [九条 CUJ 操作与验收指南](CUJ.zh-CN.md)：直接编辑、新建与复制、排序、删除与恢复、评论交给 agent、跨窗口冲突、人机共同撤销、重启恢复、请求审计与导出。每条都说明操作步骤、模型变化与边界。
+
 ## Data model 如何真正落地
 
 **只有一个权威来源：已提交的事件链 + 不可变 snapshot blobs。**
@@ -33,20 +37,20 @@ npm start
 
 `model.schema.json` 给出可审查的结构规范；服务端 `validate()` 实际执行约束：1–8 个组件、唯一 ID、标题/正文长度上限、颜色格式、拒绝未知字段。外部客户端和模型都不能跳过校验。
 
-| 操作 | 实际执行 |
-| --- | --- |
+| 操作         | 实际执行                                                                         |
+| ------------ | -------------------------------------------------------------------------------- |
 | 用户编辑标题 | 表单携带打开时的 revision → 校验 → 写 blob → 追加 event → 更新投影 → SSE 通知 UI |
-| Agent 修改 | 读取 snapshot、最近的结构化修改和锚点 comment → 提出模型 → 同一个 commit 入口 |
-| 并发写入 | baseRevision 过期返回 409，旧 agent 结果不得覆盖新的人工作品 |
-| 撤销 | 读取目标提交的 before snapshot，追加新的 revision，不删除历史 |
-| 重做 | 读取原始目标的 after snapshot，再追加提交；undo 后的新编辑清空 redo 分支 |
-| 重启 | 校验事件序列、校验 blob hash、重放提交链、重新生成作品投影 |
-| 评论 | 保存 componentId、nodeId、评论时 revision；后续请求明确包含该锚点 |
+| Agent 修改   | 读取 snapshot、最近的结构化修改和锚点 comment → 提出模型 → 同一个 commit 入口    |
+| 并发写入     | baseRevision 过期返回 409，旧 agent 结果不得覆盖新的人工作品                     |
+| 撤销         | 读取目标提交的 before snapshot，追加新的 revision，不删除历史                    |
+| 重做         | 读取原始目标的 after snapshot，再追加提交；undo 后的新编辑清空 redo 分支         |
+| 重启         | 校验事件序列、校验 blob hash、重放提交链、重新生成作品投影                       |
+| 评论         | 保存 componentId、nodeId、评论时 revision；后续请求明确包含该锚点                |
 
 例如人工把标题 A 改为 B，后端确定性生成下面的 diff，而不是让 LLM 猜测用户改了什么：
 
 ```json
-{"component_id":"welcome","node_id":"title","before":"A","after":"B"}
+{ "component_id": "welcome", "node_id": "title", "before": "A", "after": "B" }
 ```
 
 修改保存为 blob 引用，下一次 agent 输入同时包含当前 snapshot 与最近三次提交的 diff。界面点击提交事件可以直接查看 diff；点击请求事件可以查看重建的请求。单次应用注入的上下文上限为 8 KB，超限直接报错，不静默丢字段。
@@ -81,11 +85,10 @@ npm start
 
 ## 已验证与未验证
 
-11 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+15 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
 
 **尚未验证**：付费真实模型 + Codex binary 的端到端调用、Electron/macOS/Windows 包、浏览器截图测试。当前云浏览器拒绝访问本地地址，因此没有声称 UI 已做浏览器自动化验收。上游 Rust 格式化命令尝试过，但环境缺 Cargo/DotSlash；本次没有修改上游 Rust 文件。
 
-## 推到自己的 Codex fork
+## 在你的 fork 中更新
 
-所有新增代码都在 `canvas-demo/`，不会覆盖 Codex 主程序。附件附有按阶段拆分的 patches。
-创建 fork 并 clone 后，把该目录复制到仓库根目录即可运行。也可以在对应上游基线上用 `git am patches/*.patch` 应用已验证的提交。首次 fork 与登录由 GitHub 自己控制；本包不包含任何凭据或运行数据。
+所有应用代码位于 `canvas-demo/`，未修改 Codex 主程序。已有 clone 可运行 `git pull` 更新，然后进入该目录执行 `npm start`。

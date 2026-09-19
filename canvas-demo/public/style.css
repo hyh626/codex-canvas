@@ -457,3 +457,63 @@ pre {
     font-size: 27px;
   }
 }
+
+.card-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  align-items: center;
+}
+.card-toolbar .small {
+  margin: 0;
+}
+.card > button {
+  margin-top: 16px;
+  font-size: 10px;
+}
+dialog {
+  border: 1px solid #d9e0d2;
+  border-radius: 16px;
+  padding: 28px;
+  width: min(520px, 90vw);
+  color: #34453a;
+}
+dialog::backdrop {
+  background: #17251577;
+}
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+.dialog-actions button {
+  width: auto;
+}
+#inlineError {
+  color: #a64332;
+  font-size: 12px;
+}
+#comments {
+  font-size: 11px;
+  color: #78836f;
+  margin-top: 18px;
+  max-height: 300px;
+  overflow: auto;
+}
+.comment-item {
+  padding: 12px 0;
+  border-top: 1px solid #e0e5d9;
+}
+.comment-item p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #34453a;
+}
+.comment-item button {
+  font-size: 10px;
+}
+.comment-item small {
+  font-size: 9px;
+}
