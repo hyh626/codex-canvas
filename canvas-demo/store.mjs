@@ -257,8 +257,17 @@ export class Store {
     mode = "edit",
     target = null,
     causedBy = [],
+    intent = null,
   }) {
-    const fingerprint = hash(stable({ state, baseRevision, mode, target }));
+    const fingerprint = hash(
+      stable({
+        state,
+        baseRevision,
+        mode,
+        target,
+        ...(intent ? { intent } : {}),
+      }),
+    );
     if (typeof commandId !== "string" || commandId.length > 100)
       throw Error("commandId required");
     const existing = this.events.find(
@@ -284,6 +293,7 @@ export class Store {
       "workspace.edit_committed",
       {
         command_id: commandId,
+        ...(intent ? { intent } : {}),
         fingerprint,
         revision: this.revision + 1,
         before,
