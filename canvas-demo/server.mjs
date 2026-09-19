@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { Store, validate } from "./store.mjs";
 import { codexProposal } from "./codex.mjs";
+import { componentCommand } from "./commands.mjs";
 import { createGateway } from "./gateway.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
@@ -113,6 +114,20 @@ export function createApp({
           return send(413, { error: "Request too large" });
       }
       const data = JSON.parse(body);
+      if (url.pathname === "/api/component") {
+        const event = componentCommand(store, data);
+        const beforeIds = new Set(
+          store.get(event.payload.before).components.map((c) => c.id),
+        );
+        const newCard = store
+          .get(event.payload.after)
+          .components.find((c) => !beforeIds.has(c.id));
+        broadcast();
+        return send(200, {
+          ...store.view(),
+          selectedComponentId: newCard?.id || data.componentId,
+        });
+      }
       if (url.pathname === "/api/edit")
         store.commit({
           state: data.state,
