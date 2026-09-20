@@ -8,6 +8,7 @@ import { Store, validate } from "./store.mjs";
 import { runEngine, engineCapabilities } from "./engine.mjs";
 import { componentCommand } from "./commands.mjs";
 import { createGateway } from "./gateway.mjs";
+import { scenarioById } from "./scenarios.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
@@ -99,10 +100,16 @@ export function createApp({
       }
       if (
         req.method === "GET" &&
-        ["/", "/app.js", "/html-ui.js", "/style.css"].includes(url.pathname)
+        ["/", "/app.js", "/html-ui.js", "/style.css", "/scenarios.js"].includes(
+          url.pathname,
+        )
       ) {
         const file =
           url.pathname === "/" ? "index.html" : url.pathname.slice(1);
+        const source =
+          file === "scenarios.js"
+            ? path.join(here, "scenarios.mjs")
+            : path.join(here, "public", file);
         res.writeHead(200, {
           "Content-Type": file.endsWith("html")
             ? "text/html; charset=utf-8"
@@ -112,7 +119,7 @@ export function createApp({
           "Content-Security-Policy":
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'",
         });
-        return res.end(fs.readFileSync(path.join(here, "public", file)));
+        return res.end(fs.readFileSync(source));
       }
       if (req.method !== "POST") return send(404, { error: "Not found" });
       const supplied = Buffer.from(req.headers["x-canvas-token"] || "");
@@ -128,6 +135,52 @@ export function createApp({
           return send(413, { error: "Request too large" });
       }
       const data = JSON.parse(body);
+      if (url.pathname === "/api/scenario") {
+        const scenario = scenarioById.get(data.scenarioId);
+        if (!scenario) throw Error("Unknown CUJ scenario");
+        if (typeof data.commandId !== "string" || data.commandId.length > 100)
+          throw Error("commandId required");
+        const existing = store.events.find(
+          (event) =>
+            event.type === "workspace.edit_committed" &&
+            event.payload.command_id === data.commandId,
+        );
+        if (!existing) {
+          if (data.baseRevision !== store.revision)
+            return send(409, { error: "Revision conflict" });
+          validate(scenario.fixture);
+          const started = store.append(
+            "scenario.started",
+            {
+              scenario_id: scenario.id,
+              fixture_version: 1,
+              base_revision: store.revision,
+            },
+            "human",
+          );
+          store.commit({
+            state: structuredClone(scenario.fixture),
+            baseRevision: data.baseRevision,
+            commandId: data.commandId,
+            actor: "human",
+            causedBy: [started.event_id],
+            intent: { operation: "load_scenario", scenarioId: scenario.id },
+          });
+        } else {
+          store.commit({
+            state: structuredClone(scenario.fixture),
+            baseRevision: data.baseRevision,
+            commandId: data.commandId,
+            actor: "human",
+            intent: { operation: "load_scenario", scenarioId: scenario.id },
+          });
+        }
+        broadcast();
+        return send(200, {
+          ...store.view(),
+          selectedComponentId: scenario.selectedComponentId,
+        });
+      }
       if (url.pathname === "/api/component") {
         const event = componentCommand(store, data);
         const beforeIds = new Set(
@@ -201,13 +254,22 @@ export function createApp({
             { text: data.prompt, component_id: data.componentId },
             "human",
           );
+          const scenarioBoundary =
+            [...store.events]
+              .reverse()
+              .find((event) => event.type === "scenario.started")?.seq ?? 0;
           const input = {
             snapshot,
             baseRevision,
             selectedComponent: data.componentId,
             instruction: data.prompt,
             recentChanges: store.events
-              .filter((e) => e.type === "workspace.edit_committed")
+              .filter(
+                (e) =>
+                  e.type === "workspace.edit_committed" &&
+                  e.seq > scenarioBoundary &&
+                  e.payload.intent?.operation !== "load_scenario",
+              )
               .slice(-3)
               .map((e) => ({
                 revision: e.payload.revision,
@@ -215,7 +277,10 @@ export function createApp({
                 changes: e.payload.delta ? store.get(e.payload.delta) : [],
               })),
             recentComments: store.events
-              .filter((e) => e.type === "comment.created")
+              .filter(
+                (e) =>
+                  e.type === "comment.created" && e.seq > scenarioBoundary,
+              )
               .slice(-6)
               .map((e) => e.payload),
           };

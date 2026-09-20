@@ -42,6 +42,25 @@
         </p>
       </aside>
       <section class="workspace">
+        <section class="cuj-playground" aria-labelledby="cujTitle">
+          <div class="cuj-top">
+            <div>
+              <div class="eyebrow">CUJ PLAYGROUND</div>
+              <h2 id="cujTitle">Choose a typical journey</h2>
+            </div>
+            <div class="cuj-controls">
+              <label class="sr-only" for="scenario">CUJ scenario</label>
+              <select id="scenario"></select>
+              <button id="loadScenario" class="primary">Load / restart</button>
+            </div>
+          </div>
+          <p id="cujSummary" class="cuj-summary"></p>
+          <ol id="cujSteps" class="cuj-steps"></ol>
+          <div class="cuj-result">
+            <span id="cujProgress" class="pill">Not loaded</span>
+            <span><b>Expected:</b> <span id="cujExpected"></span></span>
+          </div>
+        </section>
         <div class="canvas-heading">
           <div>
             <div class="eyebrow">LIVE CANVAS</div>
