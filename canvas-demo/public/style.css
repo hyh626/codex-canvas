@@ -151,6 +151,70 @@ nav button.active {
   padding: 34px 32px;
   min-width: 0;
 }
+.cuj-playground {
+  border: 1px solid #ccd9bf;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+  background: linear-gradient(135deg, #f1f6e9, #fff 58%);
+}
+.cuj-top,
+.cuj-controls,
+.cuj-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cuj-top {
+  justify-content: space-between;
+}
+.cuj-top h2 {
+  margin: 5px 0 0;
+}
+.cuj-controls select {
+  min-width: 210px;
+}
+.cuj-summary {
+  margin: 14px 0;
+  color: #65745e;
+  font-size: 12px;
+}
+.cuj-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.cuj-steps li {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  color: #4e5e48;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.cuj-steps li.done {
+  color: #3d713a;
+}
+.cuj-steps li.manual {
+  color: #78836f;
+}
+.cuj-result {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #dfe7d6;
+  color: #687662;
+  font-size: 11px;
+  align-items: flex-start;
+}
+.cuj-result .pill {
+  flex: none;
+}
+.pill.passed {
+  color: #276b2e;
+  border-color: #81b582;
+  background: #eef9eb;
+}
 .canvas-heading {
   display: flex;
   align-items: center;
@@ -455,6 +519,18 @@ pre {
   }
   .card h3 {
     font-size: 27px;
+  }
+  .cuj-top,
+  .cuj-result {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cuj-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .cuj-controls select {
+    min-width: 0;
   }
 }
 
