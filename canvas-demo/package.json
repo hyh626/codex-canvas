@@ -9,6 +9,14 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
-    "desktop": "electron electron/main.cjs"
+    "desktop": "electron electron/main.cjs",
+    "test:desktop": "node test/e2e/html-cuj.mjs"
+  },
+  "dependencies": {
+    "parse5": "8.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "electron": "40.0.0"
   }
 }
