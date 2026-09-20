@@ -85,3 +85,7 @@ node validation/runtime-smoke.mjs codex /tmp/canvas-runtime-validation/node_modu
 4. 最后执行 macOS/Windows Electron 与浏览器交互验收。
 
 本环境中 CANVAS_MODEL、CANVAS_RESPONSES_URL、CANVAS_API_KEY、CANVAS_DSH_MODEL、CANVAS_DSH_URL、CANVAS_DSH_API_KEY、OPENAI_API_KEY、DEEPSEEK_API_KEY 均未配置，因此无法继续真实模型验收。默认后端仍为 mock。
+
+## 可执行的下一步
+
+已提供 [真实模型验收指南](LIVE-MODEL.zh-CN.md) 与 `live-model.mjs`。配置凭据后，可在支持 runtime 沙箱的主机运行相同 CUJ；缺失配置会在零请求状态阻挡。脚本自身已用真实 DSH + 模拟 provider 跑通，但本环境仍未执行真实模型验收。
