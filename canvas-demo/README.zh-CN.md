@@ -15,6 +15,12 @@ npm start
 
 验证：`npm test`。可选 Electron 壳见英文 README；macOS/Windows 安装包尚未制作。
 
+## CUJ Playground
+
+页面顶部的 **CUJ Playground** 把常用流程变成可重复运行的产品 Mock。目前内置六个场景：人工节点编辑、评论交给 Agent、人机共享 Undo、组件生命周期、HTML 节点与布局、模型请求审计。选择场景并点击 **Load / restart** 会通过服务端加载确定性 fixture；它不会清空日志，而是追加 `scenario.started` 和一笔 `load_scenario` commit。步骤完成状态根据当前 data model 和该场景之后的 trajectory 自动计算。
+
+Agent 上下文以最近一次 `scenario.started` 为边界，因此旧场景的评论和修改不会污染新场景。场景定义、初始模型和验收条件集中在 `scenarios.mjs`，UI 和服务端使用同一份定义。
+
 ## 更多可体验流程
 
 见 [九条 CUJ 操作与验收指南](CUJ.zh-CN.md)：直接编辑、新建与复制、排序、删除与恢复、评论交给 agent、跨窗口冲突、人机共同撤销、重启恢复、请求审计与导出。每条都说明操作步骤、模型变化与边界。
@@ -86,7 +92,7 @@ npm start
 
 ## 已验证与未验证
 
-22 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+26 项 Node 测试全部通过：CUJ fixture 加载和上下文隔离、编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex/DSH 协议 fixture、网关请求重建与拒绝转发。
 
 
 **尚未验证**：真实模型调用、macOS/Windows 安装包、桌面 UI 完整流程。已提供 `npm run test:desktop` 及三平台 CI；本地 Electron 在创建窗口前 SIGSEGV，不能视为桌面验收通过。测试详情见 HTML CUJ 文档。

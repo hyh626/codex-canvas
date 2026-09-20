@@ -1,4 +1,5 @@
 import { htmlNodes, htmlPreview, locateHTML } from './html-ui.js';
+import { scenarioById, scenarios, scenarioProgress } from "/scenarios.js";
 const $ = (id) => document.getElementById(id);
 let view,
   token,
@@ -6,7 +7,8 @@ let view,
   editRevision,
   dirty = false,
   running = false,
-  inlineTarget = null;
+  inlineTarget = null,
+  selectedScenarioId = scenarios[0].id;
 const status = (text, error = false) => {
   $("status").textContent = text;
   $("status").className = error ? "error" : "";
@@ -35,6 +37,39 @@ function fillEditor() {
   $("selected").textContent = c.id;
   editRevision = view.revision;
   dirty = false;
+}
+function renderScenario(followActive = true) {
+  const latest = [...view.events]
+    .reverse()
+    .find((event) => event.type === "scenario.started");
+  if (followActive && latest) selectedScenarioId = latest.payload.scenario_id;
+  $("scenario").value = selectedScenarioId;
+  const scenario = scenarioById.get(selectedScenarioId);
+  const progress = scenarioProgress(scenario, view);
+  $("cujTitle").textContent = scenario.title;
+  $("cujSummary").textContent = scenario.summary;
+  $("cujExpected").textContent = scenario.expected;
+  $("cujSteps").replaceChildren();
+  for (const step of progress.steps) {
+    const item = document.createElement("li");
+    item.className = step.done ? "done" : step.manual ? "manual" : "";
+    const marker = document.createElement("span");
+    marker.textContent = step.done ? "✓" : step.manual ? "◎" : "○";
+    const label = document.createElement("span");
+    label.textContent = step.label;
+    item.append(marker, label);
+    $("cujSteps").append(item);
+  }
+  const automated = progress.steps.filter((step) => !step.manual);
+  const completed = automated.filter((step) => step.done).length;
+  $("cujProgress").textContent = !progress.active
+    ? "Not loaded"
+    : completed === automated.length
+      ? `Auto checks passed · ${completed}/${automated.length}`
+      : `In progress · ${completed}/${automated.length}`;
+  $("cujProgress").className =
+    "pill " +
+    (progress.active && completed === automated.length ? "passed" : "");
 }
 function render(next) {
   view = next;
@@ -168,6 +203,7 @@ function render(next) {
     item.append(anchor, text, locate, use);
     $("comments").append(item);
   }
+  renderScenario();
   if (!dirty) fillEditor();
 }
 async function act(fn, message) {
@@ -332,6 +368,23 @@ for (const button of document.querySelectorAll("[data-prompt]"))
   button.onclick = () => {
     $("prompt").value = button.dataset.prompt;
   };
+for (const scenario of scenarios)
+  $("scenario").append(new Option(scenario.title, scenario.id));
+$("scenario").onchange = () => {
+  selectedScenarioId = $("scenario").value;
+  renderScenario(false);
+};
+$("loadScenario").onclick = () =>
+  act(async () => {
+    if (!discardDraft()) return false;
+    const next = await api("scenario", {
+      scenarioId: selectedScenarioId,
+      baseRevision: view.revision,
+    });
+    selected = next.selectedComponentId;
+    dirty = false;
+    render(next);
+  }, "CUJ fixture committed. Follow the steps; progress updates from the model and trajectory.");
 try {
   const response = await fetch("/api/state");
   const initial = await response.json();
