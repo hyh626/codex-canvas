@@ -5,10 +5,11 @@ Upstream baseline: `78245b47af2a7aafcabe025828ceecca69db4df1`.
 
 ## Run
 
-Node.js 22+; the browser demo has no npm dependencies and requires no API key.
+Node.js 22+; the browser demo uses parse5 for HTML validation and requires no API key.
 
 ```sh
 cd canvas-demo
+npm ci --omit=dev
 npm start
 # Open http://127.0.0.1:4317
 npm test
@@ -26,11 +27,13 @@ More journeys: create/duplicate cards, direct canvas text editing, reorder, dele
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot
-contains a bounded list of cards: `{id, title, body, color}`. The server is the only writer.
+contains cards `{id, title, body, color}` or static HTML components `{id, kind: "html", html}`.
+The HTML source in a committed snapshot is authoritative and editable through the API. The server is the only writer.
 HTML and `canvas.json` under `.data/workspace/` are rebuildable projections. **Do not edit
 those projected files directly**: restart intentionally reconstructs them from committed events.
 This is a narrower implementation than the general HTML-file-first design discussed earlier.
-It establishes the transaction/replay contract before implementing arbitrary HTML import.
+Static HTML supports stable node IDs, leaf text edits, source edits, and inline layouts.
+See [HTML CUJ and acceptance](HTML-CUJ.zh-CN.md); arbitrary HTML import is unsupported.
 
 | Concern          | Implemented behavior                                                           |
 | ---------------- | ------------------------------------------------------------------------------ |
@@ -94,11 +97,10 @@ immediately runnable without credentials. Real provider usage can incur normal A
 
 ## Electron
 
-The same browser UI and backend have an optional Electron entry point. Install Electron from
-npm locally (`npm install --no-save --package-lock=false electron`) and run `npm run desktop`.
+The same browser UI and backend have an optional Electron entry point. Install the pinned dependencies with `npm ci` and run `npm run desktop`.
 It stores its workspace in Electron `userData`, starts the backend on an ephemeral loopback
 port, and disables renderer Node integration. macOS/Windows packaging, signing and installers
-are not implemented or tested; browser mode is the verified demo. Browser cloud hosting also
+are not implemented or tested; backend HTTP behavior is verified. Browser cloud hosting also
 requires real authentication, tenant isolation and a database before exposing the server.
 
 ## Implementation map and acceptance
@@ -112,29 +114,23 @@ requires real authentication, tenant isolation and a database before exposing th
 - `test/`: restart/replay, stale write rejection, retries, undo/redo, blob tampering,
   exact archive roundtrip, HTTP loop, and fake app-server protocol coverage.
 
-20 Node integration/unit tests passed in this environment. The generated component HTML has
-an exact snapshot assertion. Full browser automation was blocked by the cloud browser's local
-URL restriction; Electron and live provider requests were not run. No upstream Rust files were
-changed. Repository-wide `just fmt` was attempted but cannot complete here because Cargo
-and DotSlash are unavailable; the addon itself is formatted with Prettier. This addon uses Node snapshot assertions, not Rust `insta`.
+22 Node integration/unit tests pass, including HTML HTTP editing, layout, conflict, restart,
+and shared Codex/DSH protocol fixtures. The Electron CUJ script is provided with Linux/macOS/Windows CI.
+Local Electron crashed with SIGSEGV before opening its first window; desktop UI and real-model
+acceptance remain unverified. No upstream Rust files changed. Repository `just fmt` was attempted
+but requires Cargo and DotSlash, unavailable here. Node tests use snapshot assertions, not Rust `insta`.
+See the HTML CUJ document for commands and limitations.
 
 ## Next coherent stages
 
-1. This stage: bounded card model and persistent transactional editing (this directory).
-2. HTML-first: versioned manifest + arbitrary component HTML, parser-based node edits,
-   round-trip preservation of unknown markup, assets and schema migrations. Switch authority
-   explicitly; do not keep two independently writable models.
-3. Broader Codex coverage: add live provider fixtures, WS and compaction verification;
-   keep all currently unsupported paths fail-closed.
-4. Desktop release: package/sign on macOS and Windows, then test process lifecycle and upgrades.
-
-See upstream `codex-rs/app-server-protocol/schema/typescript/v2/ThreadStartParams.ts` and
-`TurnStartParams.ts` for the pinned protocol; official guide:
-https://learn.chatgpt.com/docs/app-server
+1. Extend the current static HTML subset to broader markup, assets and schema migrations.
+2. Broader Codex coverage: live provider fixtures, WS and compaction verification;
+   keep unsupported paths fail-closed.
+3. Desktop release: package/sign on macOS and Windows, then test lifecycle and upgrades.
 
 ## Engine protocol / DSH adapter
 
-See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental; live runtime/provider verification remains pending. The default is still mock.
+See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental. The default is still mock; see the runtime validation record below for the verified scope.
 
 ## Runtime validation update · 2026-09-20
 

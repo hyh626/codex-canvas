@@ -1,3 +1,4 @@
+import { sampleHTML, setHTMLText } from './html.mjs';
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 
@@ -42,9 +43,12 @@ export function componentCommand(store, data) {
   const state = structuredClone(store.state);
   const index = state.components.findIndex((c) => c.id === componentId);
   const card = state.components[index];
-  if (operation !== "create" && !card)
+  if (!["create", "create_html"].includes(operation) && !card)
     throw Error("Component no longer exists");
   switch (operation) {
+    case "create_html":
+      state.components.push({id: `html-${randomUUID().slice(0,8)}`, kind: 'html', html: sampleHTML});
+      break;
     case "create":
       state.components.push({
         id: `card-${randomUUID().slice(0, 8)}`,
@@ -77,6 +81,10 @@ export function componentCommand(store, data) {
       break;
     }
     case "set_text":
+      if (card.kind === 'html') {
+        card.html = setHTMLText(card.html, nodeId, text);
+        break;
+      }
       if (!["title", "body"].includes(nodeId) || typeof text !== "string")
         throw Error("Unsupported editable node");
       card[nodeId] = text;

@@ -38,7 +38,7 @@
           </ol>
         </div>
         <p class="footnote">
-          Local demo · single writer<br />HTML is a generated view in this MVP.
+          Local demo · single writer<br />Cards and editable static HTML components.
         </p>
       </aside>
       <section class="workspace">
@@ -47,7 +47,7 @@
             <div class="eyebrow">LIVE CANVAS</div>
             <h2>Your model, made visible.</h2>
           </div>
-          <button id="newCard" class="primary">＋ New card</button>
+          <button id="newHTML">＋ HTML component</button><button id="newCard" class="primary">＋ New card</button>
         </div>
         <div class="card-toolbar" aria-label="Component actions">
           <button id="duplicate">Duplicate</button
@@ -78,7 +78,7 @@
           ></textarea>
           <div class="composer-bottom">
             <div class="presets">
-              <button data-prompt="change color">Change color</button
+              <button data-prompt="layout: horizontal">Horizontal layout</button><button data-prompt="change color">Change color</button
               ><button data-prompt="add card">Add card</button>
             </div>
             <label class="capture"
@@ -101,12 +101,14 @@
         <div class="eyebrow">INSPECTOR</div>
         <h2 id="selected">welcome</h2>
         <form id="editor">
+          <div id="htmlFields" hidden><label for="htmlSource">HTML source</label><textarea id="htmlSource" rows="14" maxlength="12000"></textarea></div>
+          <div id="cardFields">
           <label for="title">Title</label
           ><input id="title" maxlength="120" required /><label for="body"
             >Body</label
           ><textarea id="body" rows="4" maxlength="2000"></textarea
           ><label for="color">Accent</label
-          ><input type="color" id="color" /><button
+          ><input type="color" id="color" /></div><button
             class="primary"
             type="submit"
           >
@@ -116,7 +118,7 @@
             Edits become one undoable transaction.<br />Typing stays local until
             committed.
           </p>
-        </form>
+        </form><button id="reloadEditor">Reload latest component</button>
         <hr />
         <label for="comment">Comment on this component</label
         ><select id="anchor">
@@ -148,7 +150,7 @@
         ><textarea id="inlineText" rows="5"></textarea>
         <p id="inlineError" role="alert"></p>
         <div class="dialog-actions">
-          <button id="cancelInline" type="button">Cancel</button
+          <button id="rebaseInline" type="button">Compare latest / retain draft</button><button id="cancelInline" type="button">Cancel</button
           ><button class="primary" type="submit">Commit edit</button>
         </div>
       </form>

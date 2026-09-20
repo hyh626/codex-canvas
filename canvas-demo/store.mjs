@@ -1,3 +1,4 @@
+import { inspectHTML } from './html.mjs';
 import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -36,6 +37,11 @@ export function validate(state) {
     if (!/^[a-z][a-z0-9-]{0,39}$/.test(c.id) || ids.has(c.id))
       throw Error("Invalid or duplicate component ID");
     ids.add(c.id);
+    if (c.kind === 'html') {
+      if (Object.keys(c).sort().join() !== 'html,id,kind') throw Error('Unknown HTML component field');
+      inspectHTML(c.html);
+      continue;
+    }
     if (
       typeof c.title !== "string" ||
       c.title.length > 120 ||
@@ -60,6 +66,7 @@ const escape = (s) =>
       ],
   );
 export function componentHTML(c) {
+  if (c.kind === "html") return c.html;
   return `<article data-component-id="${c.id}" style="--accent:${c.color}"><h2 data-node-id="title">${escape(c.title)}</h2><p data-node-id="body">${escape(c.body)}</p></article>\n`;
 }
 export function diffModel(before, after) {
@@ -75,13 +82,13 @@ export function diffModel(before, after) {
         after: right.get(id) ?? null,
       });
     else
-      for (const field of ["title", "body", "color"])
+      for (const field of ["kind", "html", "title", "body", "color"])
         if (left.get(id)[field] !== right.get(id)[field])
           changes.push({
             component_id: id,
             node_id: field,
-            before: left.get(id)[field],
-            after: right.get(id)[field],
+            before: left.get(id)[field] ?? null,
+            after: right.get(id)[field] ?? null,
           });
   }
   if (
