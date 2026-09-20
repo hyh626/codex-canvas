@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("node:path");
 let backend;
+if (process.env.CANVAS_USER_DATA) app.setPath('userData', path.resolve(process.env.CANVAS_USER_DATA));
 app.whenReady().then(async () => {
   const { createApp } = await import("../server.mjs");
   backend = createApp({
@@ -23,6 +24,9 @@ app.whenReady().then(async () => {
     });
     window.loadURL(origin);
   });
+}).catch(error => {
+  console.error('Canvas startup failed:', error.message);
+  app.quit();
 });
 app.on("window-all-closed", () => app.quit());
 app.on("before-quit", () => backend?.close());
