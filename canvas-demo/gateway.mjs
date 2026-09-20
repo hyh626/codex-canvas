@@ -7,17 +7,21 @@ import { hash, stable } from "./store.mjs";
 // Unsupported routes/remote conversation dependencies fail closed, never bypass audit.
 export async function createGateway(
   store,
-  { endpoint, apiKey, capture = false },
+  { endpoint, apiKey, capture = false, protocol = "responses" },
 ) {
+  if (!["responses", "chat-completions"].includes(protocol))
+    throw Error("Unsupported gateway protocol");
+  const route = protocol === "responses" ? "/responses" : "/chat/completions";
+  const inputKey = protocol === "responses" ? "input" : "messages";
   const target = new URL(endpoint);
   if (
     target.username ||
     target.password ||
     target.search ||
     target.hash ||
-    !target.pathname.endsWith("/responses")
+    !target.pathname.endsWith(route)
   )
-    throw Error("Use a clean /responses endpoint URL");
+    throw Error("Use a clean endpoint URL matching the configured protocol");
   if (
     target.protocol !== "https:" &&
     !(
@@ -42,7 +46,7 @@ export async function createGateway(
     try {
       if (req.headers.authorization !== `Bearer ${token}`)
         throw Error("Invalid gateway token");
-      if (req.method !== "POST" || req.url !== "/responses")
+      if (req.method !== "POST" || req.url !== route)
         throw Error(
           "Unsupported model route (including compaction): audit refused",
         );
@@ -54,14 +58,22 @@ export async function createGateway(
       }
       const body = JSON.parse(raw);
       if (
-        body.store !== false ||
+        (protocol === "responses" && body.store !== false) ||
         body.previous_response_id != null ||
         body.conversation != null ||
-        !Array.isArray(body.input)
+        !Array.isArray(body[inputKey])
       )
         throw Error("Only full-context stateless requests are supported");
-      if (body.input.some((item) => item.type === "item_reference"))
+      if (body[inputKey].some((item) => item.type === "item_reference"))
         throw Error("Remote item references cannot be reconstructed");
+      if (
+        protocol === "chat-completions" &&
+        (body.tools?.length ||
+          body.messages.some((m) => typeof m.content !== "string"))
+      )
+        throw Error(
+          "DSH proposal mode supports text messages without tools only",
+        );
       const headers = { "content-type": "application/json" };
       // Forward and record all non-transport, non-auth application headers.
       for (const [key, value] of Object.entries(req.headers))
@@ -78,12 +90,15 @@ export async function createGateway(
           headers[key] = value;
       const descriptor = { method: "POST", url: target.href, headers };
       const config = { ...body };
-      delete config.input;
+      delete config[inputKey];
       const plan = {
-        builder: "responses-http-v1",
+        builder:
+          protocol === "responses"
+            ? "responses-http-v1"
+            : "chat-completions-http-v1",
         descriptor: store.put(descriptor),
         config: store.put(config),
-        items: body.input.map((item) => store.put(item)),
+        items: body[inputKey].map((item) => store.put(item)),
       };
       const actual = { descriptor, body };
       const rebuilt = store.rebuild(plan);
@@ -93,7 +108,7 @@ export async function createGateway(
         plan,
         verification: {
           assert: true,
-          scope: "responses-http-request",
+          scope: `${protocol}-http-request`,
           request_hash: hash(stable(actual)),
         },
         ...(capture ? { body: store.put(actual) } : {}),

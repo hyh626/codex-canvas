@@ -322,12 +322,15 @@ export class Store {
     });
   }
   rebuild(plan) {
-    if (plan.builder === "responses-http-v1")
+    if (
+      ["responses-http-v1", "chat-completions-http-v1"].includes(plan.builder)
+    )
       return {
         descriptor: this.get(plan.descriptor),
         body: {
           ...this.get(plan.config),
-          input: plan.items.map((ref) => this.get(ref)),
+          [plan.builder === "responses-http-v1" ? "input" : "messages"]:
+            plan.items.map((ref) => this.get(ref)),
         },
       };
     if (plan.builder !== "mock-request-v1")
