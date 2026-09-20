@@ -302,10 +302,10 @@ $("engine").onchange = () => {
   const mock = $("engine").value === "mock";
   $("audit").textContent = mock
     ? "assert = true · mock request"
-    : "assert = true · Responses HTTP";
+    : `assert = true · ${$("engine").value === "dsh" ? "Chat Completions HTTP" : "Responses HTTP"}`;
   $("agentNote").textContent = mock
     ? "Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call."
-    : "Codex proposes changes through an audited Responses HTTP gateway. Unsupported transports are rejected.";
+    : "The selected engine proposes changes through an audited HTTP gateway. Unsupported transports are rejected.";
 };
 $("run").onclick = () =>
   act(async () => {
@@ -337,6 +337,7 @@ try {
   const initial = await response.json();
   token = initial.token;
   $("engine").querySelector("[value=codex]").disabled = !initial.codexEnabled;
+  $("engine").querySelector("[value=dsh]").disabled = !initial.dshEnabled;
   render(initial);
   status("Ready. Edit the selected component or try an agent instruction.");
   const events = new EventSource("/api/stream");

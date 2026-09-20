@@ -40,9 +40,11 @@ export async function codexProposal(
     args = ["app-server"],
     timeout = 120000,
     gateway,
+    signal,
     model = process.env.CANVAS_MODEL,
   } = {},
 ) {
+  signal?.throwIfAborted();
   const cwd = await mkdtemp(path.join(os.tmpdir(), "canvas-proposal-"));
   const home = path.join(cwd, "codex-home");
   await mkdir(home);
@@ -88,6 +90,10 @@ supports_websockets = false
     pending.clear();
     rejectTurn(error);
   };
+  const abort = () =>
+    fail(Object.assign(Error("Engine run cancelled"), { code: "CANCELLED" }));
+  signal?.addEventListener("abort", abort, { once: true });
+  child.stdin.on("error", fail);
   child.on("error", fail);
   child.on("exit", (code) => fail(Error(`Codex exited (${code})`)));
   child.stderr.on("data", () => {}); // Drain stderr; no authentication material enters product logs.
@@ -140,10 +146,11 @@ supports_websockets = false
       child.stdin.write(JSON.stringify(message) + "\n");
     });
   const timer = setTimeout(() => {
-    fail(Error("Codex timed out"));
+    fail(Object.assign(Error("Codex timed out"), { code: "TIMEOUT" }));
     child.kill();
   }, timeout);
   try {
+    if (signal?.aborted) abort();
     await rpc("initialize", {
       clientInfo: {
         name: "canvas_demo",
@@ -171,9 +178,17 @@ supports_websockets = false
     await completed;
     return JSON.parse(resultText);
   } finally {
+    signal?.removeEventListener("abort", abort);
     clearTimeout(timer);
     lines.close();
-    child.kill();
+    if (child.pid && child.exitCode === null && child.signalCode === null) {
+      await new Promise((resolve) => {
+        child.once("exit", resolve);
+        child.kill();
+        const escalation = setTimeout(() => child.kill("SIGKILL"), 1000);
+        child.once("exit", () => clearTimeout(escalation));
+      });
+    }
     await rm(cwd, { recursive: true, force: true });
   }
 }

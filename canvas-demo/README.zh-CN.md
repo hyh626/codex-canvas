@@ -86,10 +86,19 @@ npm start
 
 ## 已验证与未验证
 
-17 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+22 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+
 
 **尚未验证**：真实模型调用、macOS/Windows 安装包、桌面 UI 完整流程。已提供 `npm run test:desktop` 及三平台 CI；本地 Electron 在创建窗口前 SIGSEGV，不能视为桌面验收通过。测试详情见 HTML CUJ 文档。
 
 ## 在你的 fork 中更新
 
 所有应用代码位于 `canvas-demo/`，未修改 Codex 主程序。已有 clone 可运行 `git pull` 更新，然后进入该目录执行 `npm ci --omit=dev`、`npm start`。
+
+## Engine protocol / DSH adapter
+
+See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental. The default is still mock; see the runtime validation record below for the verified scope.
+
+## Runtime validation update · 2026-09-20
+
+[真实 runtime 验收记录](validation/RESULTS.zh-CN.md)：DSH 0.1.5-rc.2 已通过真实进程 + 本地模拟 provider 的请求重建、capture、proposal 与事务检查。Codex 0.155.1 握手通过，但 thread/start 被当前环境的 Bubblewrap 权限限制阻挡。真实模型仍未测试；此记录更新上文关于 runtime 尚未验证的状态。

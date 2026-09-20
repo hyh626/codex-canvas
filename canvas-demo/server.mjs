@@ -5,12 +5,19 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { Store, validate } from "./store.mjs";
-import { codexProposal } from "./codex.mjs";
+import { runEngine, engineCapabilities } from "./engine.mjs";
 import { componentCommand } from "./commands.mjs";
 import { createGateway } from "./gateway.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
+  engineOptions = {},
+  allowDsh = Boolean(
+    process.env.DSH_BIN &&
+    process.env.CANVAS_DSH_MODEL &&
+    process.env.CANVAS_DSH_URL &&
+    process.env.CANVAS_DSH_API_KEY,
+  ),
   allowCodex = Boolean(
     process.env.CANVAS_MODEL &&
     process.env.CANVAS_RESPONSES_URL &&
@@ -50,7 +57,13 @@ export function createApp({
         return send(403, { error: "Invalid origin" });
       const url = new URL(req.url, origin);
       if (req.method === "GET" && url.pathname === "/api/state")
-        return send(200, { ...store.view(), token, codexEnabled: allowCodex });
+        return send(200, {
+          ...store.view(),
+          token,
+          codexEnabled: allowCodex,
+          dshEnabled: allowDsh,
+          engineCapabilities,
+        });
       if (req.method === "GET" && url.pathname.startsWith("/api/event/")) {
         const event = store.events.find(
           (e) => e.event_id === url.pathname.slice(11),
@@ -166,13 +179,18 @@ export function createApp({
           typeof data.prompt !== "string" ||
           !data.prompt.trim() ||
           data.prompt.length > 2000 ||
-          !["mock", "codex"].includes(data.engine)
+          !["mock", "codex", "dsh"].includes(data.engine)
         )
           throw Error("Invalid agent request");
         if (data.engine === "codex" && !allowCodex)
           return send(422, {
             error:
               "Codex requires CANVAS_MODEL, CANVAS_RESPONSES_URL and CANVAS_API_KEY. Model requests must pass the audited HTTP gateway.",
+          });
+        if (data.engine === "dsh" && !allowDsh)
+          return send(422, {
+            error:
+              "DSH requires DSH_BIN, CANVAS_DSH_MODEL, CANVAS_DSH_URL and CANVAS_DSH_API_KEY.",
           });
         busy = true;
         try {
@@ -243,17 +261,39 @@ export function createApp({
             );
           } else {
             const gateway = await createGateway(store, {
-              endpoint: process.env.CANVAS_RESPONSES_URL,
-              apiKey: process.env.CANVAS_API_KEY,
+              endpoint:
+                engineOptions[data.engine]?.endpoint ??
+                (data.engine === "dsh"
+                  ? process.env.CANVAS_DSH_URL
+                  : process.env.CANVAS_RESPONSES_URL),
+              protocol: engineCapabilities[data.engine].wire,
+              apiKey:
+                engineOptions[data.engine]?.apiKey ??
+                (data.engine === "dsh"
+                  ? process.env.CANVAS_DSH_API_KEY
+                  : process.env.CANVAS_API_KEY),
               capture: data.capture === true,
             });
             try {
-              proposal = await codexProposal(
+              const auditStart = store.events.length;
+              const result = await runEngine(
+                data.engine,
                 input,
                 (type, payload) =>
                   store.append(type, { ref: store.put(payload) }),
-                { gateway },
+                { ...engineOptions[data.engine], gateway },
               );
+              if (
+                !store.events
+                  .slice(auditStart)
+                  .some(
+                    (e) =>
+                      e.type === "model.request_prepared" &&
+                      e.payload.verification?.assert === true,
+                  )
+              )
+                throw Error("Engine returned without an audited model request");
+              proposal = result.proposal;
             } finally {
               gateway.close();
             }

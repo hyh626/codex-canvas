@@ -114,7 +114,24 @@ requires real authentication, tenant isolation and a database before exposing th
 - `test/`: restart/replay, stale write rejection, retries, undo/redo, blob tampering,
   exact archive roundtrip, HTTP loop, and fake app-server protocol coverage.
 
-17 Node integration/unit tests pass, including HTML HTTP editing, layout, conflict, and restart.
-The Electron CUJ script is provided with Linux/macOS/Windows CI. Local Electron crashed with
-SIGSEGV before opening its first window; desktop and real-provider acceptance remain unverified.
-No upstream Rust files changed. See the HTML CUJ document for commands and limitations.
+22 Node integration/unit tests pass, including HTML HTTP editing, layout, conflict, restart,
+and shared Codex/DSH protocol fixtures. The Electron CUJ script is provided with Linux/macOS/Windows CI.
+Local Electron crashed with SIGSEGV before opening its first window; desktop UI and real-model
+acceptance remain unverified. No upstream Rust files changed. Repository `just fmt` was attempted
+but requires Cargo and DotSlash, unavailable here. Node tests use snapshot assertions, not Rust `insta`.
+See the HTML CUJ document for commands and limitations.
+
+## Next coherent stages
+
+1. Extend the current static HTML subset to broader markup, assets and schema migrations.
+2. Broader Codex coverage: live provider fixtures, WS and compaction verification;
+   keep unsupported paths fail-closed.
+3. Desktop release: package/sign on macOS and Windows, then test lifecycle and upgrades.
+
+## Engine protocol / DSH adapter
+
+See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental. The default is still mock; see the runtime validation record below for the verified scope.
+
+## Runtime validation update · 2026-09-20
+
+[真实 runtime 验收记录](validation/RESULTS.zh-CN.md)：DSH 0.1.5-rc.2 已通过真实进程 + 本地模拟 provider 的请求重建、capture、proposal 与事务检查。Codex 0.155.1 握手通过，但 thread/start 被当前环境的 Bubblewrap 权限限制阻挡。真实模型仍未测试；此记录更新上文关于 runtime 尚未验证的状态。
