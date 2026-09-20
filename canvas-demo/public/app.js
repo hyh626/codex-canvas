@@ -1,3 +1,4 @@
+import { htmlNodes, htmlPreview, locateHTML } from './html-ui.js';
 const $ = (id) => document.getElementById(id);
 let view,
   token,
@@ -23,7 +24,14 @@ async function api(route, payload) {
 function fillEditor() {
   const c = view.state.components.find((c) => c.id === selected);
   if (!c) return;
-  for (const key of ["title", "body", "color"]) $(key).value = c[key];
+  const html = c.kind === 'html';
+  $('cardFields').hidden = html;
+  $('htmlFields').hidden = !html;
+  for (const key of ['title','body','color']) { $(key).disabled = html; if (!html) $(key).value = c[key]; }
+  if (html) $('htmlSource').value = c.html;
+  const previousAnchor = $('anchor').value;
+  $('anchor').replaceChildren(...(html ? htmlNodes(c.html) : [{id:'title'},{id:'body'}]).map(n => new Option(n.id, n.id)));
+  if ([...$('anchor').options].some(o => o.value === previousAnchor)) $('anchor').value = previousAnchor;
   $("selected").textContent = c.id;
   editRevision = view.revision;
   dirty = false;
@@ -47,7 +55,7 @@ function render(next) {
   $("moveEarlier").disabled = selectedIndex === 0;
   $("moveLater").disabled = selectedIndex === view.state.components.length - 1;
   $("deleteCard").disabled = view.state.components.length === 1;
-  $("newCard").disabled = $("duplicate").disabled =
+  $("newCard").disabled = $("newHTML").disabled = $("duplicate").disabled =
     view.state.components.length >= 8;
   $("model").textContent = JSON.stringify(
     { revision: view.revision, ...view.state },
@@ -71,10 +79,16 @@ function render(next) {
     $("components").append(nav);
     const card = document.createElement("article");
     card.className = "card" + (c.id === selected ? " selected" : "");
-    card.style.setProperty("--accent", c.color);
+    card.style.setProperty("--accent", c.color || "#6366f1");
     card.tabIndex = 0;
     card.setAttribute("aria-label", c.id);
     card.dataset.componentId = c.id;
+    if (c.kind === 'html') {
+      card.append(htmlPreview(c, choose, openInline, id => { $('anchor').value = id; }));
+      const label = document.createElement('small'); label.textContent = c.id + ' / HTML · double-click text to edit'; card.append(label);
+      $('canvas').append(card);
+      continue;
+    }
     const marker = document.createElement("div");
     marker.className = "marker";
     const title = document.createElement("h3");
@@ -146,7 +160,12 @@ function render(next) {
       $("prompt").focus();
       status("Comment copied into the agent prompt. Review it, then run.");
     };
-    item.append(anchor, text, use);
+    const component = view.state.components.find(c => c.id === selected);
+    const ids = component.kind === 'html' ? htmlNodes(component.html).map(n => n.id) : ['title','body'];
+    const located = ids.includes(event.payload.node_id);
+    const locate = document.createElement('button'); locate.textContent = located ? 'Locate node' : 'Node removed · historical comment'; locate.disabled = !located;
+    locate.onclick = () => locateHTML(selected, event.payload.node_id);
+    item.append(anchor, text, locate, use);
     $("comments").append(item);
   }
   if (!dirty) fillEditor();
@@ -173,12 +192,21 @@ function openInline(card, nodeId) {
   $("inlineLabel").textContent = `Edit ${nodeId}`;
   $("inlineContext").textContent =
     `${card.id} · revision ${view.revision}. Later changes will cause a conflict.`;
-  $("inlineText").value = card[nodeId];
+  $("inlineText").value = card.kind === "html" ? htmlNodes(card.html).find(n => n.id === nodeId).text : card[nodeId];
   $("inlineText").maxLength = nodeId === "title" ? 120 : 2000;
   $("inlineError").textContent = "";
   $("inlineEdit").showModal();
   $("inlineText").focus();
 }
+$('rebaseInline').onclick = () => {
+  const c = view.state.components.find(c => c.id === inlineTarget.componentId);
+  const node = c?.kind === 'html' ? htmlNodes(c.html).find(n => n.id === inlineTarget.nodeId && n.leaf) : c && {text:c[inlineTarget.nodeId]};
+  if (!node) { $('inlineError').textContent = 'Target no longer exists or is not a text leaf.'; return; }
+  $('inlineContext').textContent = `Latest r${view.revision}: ${node.text}. Your draft is retained. Commit explicitly to replace this text.`;
+  inlineTarget.baseRevision = view.revision;
+  $('inlineError').textContent = '';
+};
+$('reloadEditor').onclick = () => { if (discardDraft()) fillEditor(); };
 $("cancelInline").onclick = () => $("inlineEdit").close();
 $("inlineForm").onsubmit = async (event) => {
   event.preventDefault();
@@ -190,13 +218,14 @@ $("inlineForm").onsubmit = async (event) => {
     });
     $("inlineEdit").close();
     render(next);
-    status("Canvas text committed with a node-level diff.");
+    status("Canvas text committed with its target and source diff.");
   } catch (error) {
     $("inlineError").textContent = error.message;
   }
 };
 for (const [id, operation, direction] of [
   ["newCard", "create"],
+  ["newHTML", "create_html"],
   ["duplicate", "duplicate"],
   ["deleteCard", "delete"],
   ["moveEarlier", "move", -1],
@@ -227,14 +256,9 @@ $("editor").onsubmit = (event) => {
   act(async () => {
     // Preserve the revision from when this form was loaded. Never silently rebase an old form.
     const state = structuredClone(view.state);
-    Object.assign(
-      state.components.find((c) => c.id === selected),
-      {
-        title: $("title").value,
-        body: $("body").value,
-        color: $("color").value,
-      },
-    );
+    const c = state.components.find(c => c.id === selected);
+    if (c.kind === 'html') c.html = $('htmlSource').value;
+    else Object.assign(c, {title:$('title').value,body:$('body').value,color:$('color').value});
     const next = await api("edit", { state, baseRevision: editRevision });
     dirty = false;
     render(next);
@@ -280,7 +304,7 @@ $("engine").onchange = () => {
     ? "assert = true · mock request"
     : "assert = true · Responses HTTP";
   $("agentNote").textContent = mock
-    ? "Mock recognizes title text, “change color”, and “add card”. No model API call."
+    ? "Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call."
     : "Codex proposes changes through an audited Responses HTTP gateway. Unsupported transports are rejected.";
 };
 $("run").onclick = () =>

@@ -4,10 +4,11 @@
 
 ## 三条命令启动
 
-需要 Node.js 22 或更新版本。默认 mock 模式不需要 API key，也不需要安装 npm 依赖。
+需要 Node.js 22 或更新版本。默认 mock 模式不需要 API key，HTML 校验使用 parse5，需要先安装依赖。
 
 ```sh
 cd canvas-demo
+npm ci --omit=dev
 npm start
 # 浏览器打开 http://127.0.0.1:4317
 ```
@@ -67,7 +68,7 @@ npm start
   writer.lock                 # 单进程写入锁
 ```
 
-**本版暂不实现任意 HTML 文件作为可编辑权威模型。** 与之前通用方案的区别是：本版使用受控卡片模型验证事务闭环，HTML 是生成投影；直接编辑这些投影文件会在恢复时被覆盖。后续切换到 HTML-first 时，需要实现解析器、节点补丁、未知 markup 保留和资产管理，明确切换权威来源，不能留下两套可独立写入的状态。
+**新增 HTML 组件 `{id, kind: "html", html}`，snapshot 中的 HTML 原文是权威内容。** 支持经过白名单校验的静态 HTML、行内布局样式、稳定 `data-node-id`、叶子文字编辑和原文编辑。旧卡片仍兼容；磁盘 HTML 文件依然是可恢复投影，不能绕过 API 直接提交。脚本、外部资产、任意网页导入和多文件原子发布尚未实现。详见 [HTML CUJ 与验收记录](HTML-CUJ.zh-CN.md)。
 
 事件与 blob 在提交确认前 fsync。文件投影不是多文件原子事务，外部程序不能把其写入过程作为原子版本读取；当前 UI 读取后端已提交状态。进程硬崩溃留下的锁不自动抢占，确认旧进程已经退出后才能删除锁。生产版本应采用事务数据库或 revision 目录 + 原子指针。
 
@@ -85,10 +86,10 @@ npm start
 
 ## 已验证与未验证
 
-15 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+17 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
 
-**尚未验证**：付费真实模型 + Codex binary 的端到端调用、Electron/macOS/Windows 包、浏览器截图测试。当前云浏览器拒绝访问本地地址，因此没有声称 UI 已做浏览器自动化验收。上游 Rust 格式化命令尝试过，但环境缺 Cargo/DotSlash；本次没有修改上游 Rust 文件。
+**尚未验证**：真实模型调用、macOS/Windows 安装包、桌面 UI 完整流程。已提供 `npm run test:desktop` 及三平台 CI；本地 Electron 在创建窗口前 SIGSEGV，不能视为桌面验收通过。测试详情见 HTML CUJ 文档。
 
 ## 在你的 fork 中更新
 
-所有应用代码位于 `canvas-demo/`，未修改 Codex 主程序。已有 clone 可运行 `git pull` 更新，然后进入该目录执行 `npm start`。
+所有应用代码位于 `canvas-demo/`，未修改 Codex 主程序。已有 clone 可运行 `git pull` 更新，然后进入该目录执行 `npm ci --omit=dev`、`npm start`。

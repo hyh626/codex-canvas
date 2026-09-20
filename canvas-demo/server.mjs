@@ -1,3 +1,4 @@
+import { anchorExists, mockLayout, setHTMLText } from './html.mjs';
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -85,7 +86,7 @@ export function createApp({
       }
       if (
         req.method === "GET" &&
-        ["/", "/app.js", "/style.css"].includes(url.pathname)
+        ["/", "/app.js", "/html-ui.js", "/style.css"].includes(url.pathname)
       ) {
         const file =
           url.pathname === "/" ? "index.html" : url.pathname.slice(1);
@@ -96,7 +97,7 @@ export function createApp({
               ? "text/javascript"
               : "text/css",
           "Content-Security-Policy":
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'none'",
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; frame-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'",
         });
         return res.end(fs.readFileSync(path.join(here, "public", file)));
       }
@@ -140,8 +141,7 @@ export function createApp({
         if (data.baseRevision !== store.revision)
           return send(409, { error: "Comment anchor revision changed" });
         if (
-          !store.state.components.some((c) => c.id === data.componentId) ||
-          !["title", "body"].includes(data.nodeId) ||
+          !anchorExists(store.state.components.find((c) => c.id === data.componentId), data.nodeId) ||
           typeof data.text !== "string" ||
           !data.text.trim() ||
           data.text.length > 2000
@@ -216,7 +216,10 @@ export function createApp({
               (c) => c.id === data.componentId,
             );
             if (!c) throw Error("Select a component");
-            if (/add|新增|添加/i.test(data.prompt))
+            if (c.kind === 'html') {
+              if (/layout|布局|横向/i.test(data.prompt)) c.html = mockLayout(c.html);
+              else c.html = setHTMLText(c.html, 'title', data.prompt.replace(/^(title|标题)\s*[:：]\s*/i, '').slice(0,120));
+            } else if (/add|新增|添加/i.test(data.prompt))
               proposal.components.push({
                 id: `card-${randomUUID().slice(0, 8)}`,
                 title: "A new direction",
