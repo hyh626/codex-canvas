@@ -1,0 +1,14 @@
+{
+  "node": "24.19.0",
+  "platform": "linux-x64",
+  "packages": {
+    "@openai/codex": {
+      "version": "0.155.1",
+      "integrity": "sha512-02fAAGyBtlA1zPjEo3kTj/bOSYbPz5DvjLwRZJdV7weFFEDzNFOMjQGmZ/+5CuirYV0hE+AZTrnjzwXYU4AdAQ=="
+    },
+    "@deepseek-ai/dsh": {
+      "version": "0.1.5-rc.2",
+      "integrity": "sha512-8Xc8hCQHcIWRmTCVU/xZdp6/qMsWMeAd2ObChKDEsfhUPJFXx6H0lgeb1DxUMD86HZrrVN+1bCvn1ppjZ/fOxw=="
+    }
+  }
+}
