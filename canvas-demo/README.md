@@ -135,3 +135,7 @@ https://learn.chatgpt.com/docs/app-server
 ## Engine protocol / DSH adapter
 
 See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental; live runtime/provider verification remains pending. The default is still mock.
+
+## Runtime validation update · 2026-09-20
+
+[真实 runtime 验收记录](validation/RESULTS.zh-CN.md)：DSH 0.1.5-rc.2 已通过真实进程 + 本地模拟 provider 的请求重建、capture、proposal 与事务检查。Codex 0.155.1 握手通过，但 thread/start 被当前环境的 Bubblewrap 权限限制阻挡。真实模型仍未测试；此记录更新上文关于 runtime 尚未验证的状态。

@@ -136,3 +136,7 @@ fixture 是真实子进程与真实本地 HTTP 网关，但 **不是上游 runti
 - [DSH SDK wire types](https://github.com/deepseek-ai/deepseek-harness/blob/ddefc45fbc7f8e46dd73185e68295696d1297887/packages/sdk/protocol/src/types.ts)
 - [DSH receipt-to-idle 结果规则](https://github.com/deepseek-ai/deepseek-harness/blob/ddefc45fbc7f8e46dd73185e68295696d1297887/packages/sdk/client/src/api.ts)
 - [DSH minimal profile](https://github.com/deepseek-ai/deepseek-harness/blob/ddefc45fbc7f8e46dd73185e68295696d1297887/packages/bundle/sdk-minimal/cordis.patch.yml)
+
+## Runtime validation update · 2026-09-20
+
+[真实 runtime 验收记录](validation/RESULTS.zh-CN.md)：DSH 0.1.5-rc.2 已通过真实进程 + 本地模拟 provider 的请求重建、capture、proposal 与事务检查。Codex 0.155.1 握手通过，但 thread/start 被当前环境的 Bubblewrap 权限限制阻挡。真实模型仍未测试；此记录更新上文关于 runtime 尚未验证的状态。
