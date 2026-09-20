@@ -85,10 +85,14 @@ npm start
 
 ## 已验证与未验证
 
-15 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
+20 项 Node 测试全部通过：编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex 协议 fixture、网关请求重建与拒绝转发。
 
 **尚未验证**：付费真实模型 + Codex binary 的端到端调用、Electron/macOS/Windows 包、浏览器截图测试。当前云浏览器拒绝访问本地地址，因此没有声称 UI 已做浏览器自动化验收。上游 Rust 格式化命令尝试过，但环境缺 Cargo/DotSlash；本次没有修改上游 Rust 文件。
 
 ## 在你的 fork 中更新
 
 所有应用代码位于 `canvas-demo/`，未修改 Codex 主程序。已有 clone 可运行 `git pull` 更新，然后进入该目录执行 `npm start`。
+
+## Engine protocol / DSH adapter
+
+See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental; live runtime/provider verification remains pending. The default is still mock.

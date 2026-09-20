@@ -112,7 +112,7 @@ requires real authentication, tenant isolation and a database before exposing th
 - `test/`: restart/replay, stale write rejection, retries, undo/redo, blob tampering,
   exact archive roundtrip, HTTP loop, and fake app-server protocol coverage.
 
-15 Node integration/unit tests passed in this environment. The generated component HTML has
+20 Node integration/unit tests passed in this environment. The generated component HTML has
 an exact snapshot assertion. Full browser automation was blocked by the cloud browser's local
 URL restriction; Electron and live provider requests were not run. No upstream Rust files were
 changed. Repository-wide `just fmt` was attempted but cannot complete here because Cargo
@@ -131,3 +131,7 @@ and DotSlash are unavailable; the addon itself is formatted with Prettier. This 
 See upstream `codex-rs/app-server-protocol/schema/typescript/v2/ThreadStartParams.ts` and
 `TurnStartParams.ts` for the pinned protocol; official guide:
 https://learn.chatgpt.com/docs/app-server
+
+## Engine protocol / DSH adapter
+
+See [Canvas Engine Protocol v1](ENGINE-PROTOCOL.zh-CN.md) for the Codex/DSH boundary, configuration, request audit, lifecycle, and shared CUJ fixtures. DSH is experimental; live runtime/provider verification remains pending. The default is still mock.
