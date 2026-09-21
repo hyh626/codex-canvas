@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "case_id": "html-component/security-error",
+  "scenario_id": "html-component",
+  "example_id": "security-error",
+  "title": "Reject unsafe or ambiguous HTML mutations",
+  "seed": 1503,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "hero",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": {
+    "id": "html-security-active-content",
+    "stage": "input",
+    "outcome": "failed"
+  },
+  "tags": [
+    "p0",
+    "html",
+    "security"
+  ]
+}

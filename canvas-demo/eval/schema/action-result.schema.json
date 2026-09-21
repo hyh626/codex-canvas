@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-action-result:v1",
+  "title": "Canvas evaluation action result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "action_id", "step", "status", "emitted_events", "capture_ids", "duration_ms"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "action_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+    "step": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["succeeded", "rejected", "failed"] },
+    "http_status": { "type": "integer", "minimum": 100, "maximum": 599 },
+    "emitted_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seq", "event_id", "type"],
+        "properties": {
+          "seq": { "type": "integer", "minimum": 1 },
+          "event_id": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "capture_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "duration_ms": { "type": "number", "minimum": 0 },
+    "response": { "$ref": "#/$defs/ref" },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "pause_at", "status", "observations"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+        "pause_at": { "const": "before_model_commit" },
+        "status": { "enum": ["not_reached", "paused", "released", "release_failed"] },
+        "release_reason": { "enum": ["captured", "capture_timeout", "runner_error", "cancelled"] },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "message"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "message": { "type": "string", "minLength": 1 }
+          }
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ordinal", "phase"],
+            "properties": {
+              "ordinal": { "type": "integer", "minimum": 1 },
+              "phase": { "enum": ["gate_armed", "gate_paused", "capture_started", "capture_finished", "gate_released", "gate_release_failed"] },
+              "capture_id": { "type": "string", "minLength": 1 }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "phase": { "enum": ["capture_started", "capture_finished"] } }, "required": ["phase"] },
+                "then": { "required": ["capture_id"] },
+                "else": { "not": { "required": ["capture_id"] } }
+              }
+            ]
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "released" } }, "required": ["status"] },
+          "then": {
+            "required": ["release_reason"],
+            "properties": {
+              "observations": {
+                "minItems": 3,
+                "allOf": [
+                  { "contains": { "properties": { "phase": { "const": "gate_armed" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "gate_paused" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "gate_released" } }, "required": ["phase"] } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["not_reached", "paused", "release_failed"] } }, "required": ["status"] },
+          "then": { "not": { "required": ["release_reason"] } }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["not_reached", "paused", "release_failed"] } }, "required": ["status"] },
+          "then": { "required": ["error"] }
+        },
+        {
+          "if": { "properties": { "release_reason": { "enum": ["captured", "capture_timeout"] } }, "required": ["release_reason"] },
+          "then": {
+            "properties": {
+              "observations": {
+                "minItems": 5,
+                "allOf": [
+                  { "contains": { "properties": { "phase": { "const": "capture_started" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "capture_finished" } }, "required": ["phase"] } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "not_reached" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "observations": {
+                "contains": { "properties": { "phase": { "const": "gate_armed" } }, "required": ["phase"] }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "paused" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "observations": {
+                "allOf": [
+                  { "contains": { "properties": { "phase": { "const": "gate_armed" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "gate_paused" } }, "required": ["phase"] } }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "release_failed" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "observations": {
+                "allOf": [
+                  { "contains": { "properties": { "phase": { "const": "gate_armed" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "gate_paused" } }, "required": ["phase"] } },
+                  { "contains": { "properties": { "phase": { "const": "gate_release_failed" } }, "required": ["phase"] } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "message"],
+      "properties": {
+        "name": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes", "media_type"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "media_type": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["rejected", "failed"] } }, "required": ["status"] },
+      "then": { "required": ["error"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "gate": {
+            "properties": { "status": { "enum": ["not_reached", "paused", "release_failed"] } },
+            "required": ["status"]
+          }
+        },
+        "required": ["gate"]
+      },
+      "then": {
+        "required": ["error"],
+        "properties": { "status": { "enum": ["rejected", "failed"] } }
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "kind": "invalid-mutation",
+  "bundle_valid": false,
+  "error_codes": [
+    "capture.cutoff_regressed"
+  ]
+}

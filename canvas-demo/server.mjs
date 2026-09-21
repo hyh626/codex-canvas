@@ -13,6 +13,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
   engineOptions = {},
+  evalHooks = {},
   allowDsh = Boolean(
     process.env.DSH_BIN &&
     process.env.CANVAS_DSH_MODEL &&
@@ -289,6 +290,7 @@ export function createApp({
               "Model context exceeds this demo’s 8 KB limit; reduce card content/comments before retrying.",
             );
           let proposal;
+          await evalHooks.beforeAgentRequest?.({ data, input, store });
           if (data.engine === "mock") {
             const { request, event } = store.prepare(
               [{ role: "user", content: input }],
@@ -363,6 +365,10 @@ export function createApp({
               gateway.close();
             }
           }
+          proposal =
+            (await evalHooks.transformProposal?.({ data, input, proposal, store })) ??
+            proposal;
+          await evalHooks.beforeAgentCommit?.({ data, input, proposal, store });
           validate(proposal);
           store.commit({
             state: proposal,

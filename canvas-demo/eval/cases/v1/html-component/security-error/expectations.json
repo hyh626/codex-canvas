@@ -1,0 +1,83 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "html-component/security-error",
+  "initial_model": {
+    "components": [
+      {
+        "id": "hero",
+        "kind": "html",
+        "html": "<article data-node-id=\"root\" style=\"display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px\">\n  <header data-node-id=\"heading\"><small data-node-id=\"eyebrow\">CUJ PLAYGROUND</small><h2 data-node-id=\"title\">A shared HTML component</h2></header>\n  <section data-node-id=\"content\"><p data-node-id=\"body\">Edit this node, then ask the agent to change the layout.</p><ul data-node-id=\"features\"><li data-node-id=\"feature-one\">Stable comment anchors</li><li data-node-id=\"feature-two\">One shared history</li></ul></section>\n</article>"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "load-scenario-checkpoint",
+      "after_action_id": "load-scenario",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "scenario.started"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "hero",
+            "kind": "html",
+            "html": "<article data-node-id=\"root\" style=\"display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px\">\n  <header data-node-id=\"heading\"><small data-node-id=\"eyebrow\">CUJ PLAYGROUND</small><h2 data-node-id=\"title\">A shared HTML component</h2></header>\n  <section data-node-id=\"content\"><p data-node-id=\"body\">Edit this node, then ask the agent to change the layout.</p><ul data-node-id=\"features\"><li data-node-id=\"feature-one\">Stable comment anchors</li><li data-node-id=\"feature-two\">One shared history</li></ul></section>\n</article>"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "hero",
+            "selected_scenario_id": "html-component",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "unsafe-html-checkpoint",
+      "after_action_id": "unsafe-html",
+      "expected_action_status": "failed",
+      "expected_events": {
+        "sequence": [],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "hero",
+            "kind": "html",
+            "html": "<article data-node-id=\"root\" style=\"display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px\">\n  <header data-node-id=\"heading\"><small data-node-id=\"eyebrow\">CUJ PLAYGROUND</small><h2 data-node-id=\"title\">A shared HTML component</h2></header>\n  <section data-node-id=\"content\"><p data-node-id=\"body\">Edit this node, then ask the agent to change the layout.</p><ul data-node-id=\"features\"><li data-node-id=\"feature-one\">Stable comment anchors</li><li data-node-id=\"feature-two\">One shared history</li></ul></section>\n</article>"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "error",
+          "expected_ui": {
+            "selected_component_id": "hero",
+            "selected_scenario_id": "html-component",
+            "connection": "connected",
+            "running": false,
+            "status": {
+              "tone": "error"
+            }
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "unsafe-html-checkpoint"
+}

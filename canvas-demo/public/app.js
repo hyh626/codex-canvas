@@ -9,6 +9,7 @@ let view,
   running = false,
   inlineTarget = null,
   selectedScenarioId = scenarios[0].id;
+const evalMode = new URLSearchParams(location.search).get("eval") === "1";
 const status = (text, error = false) => {
   $("status").textContent = text;
   $("status").className = error ? "error" : "";
@@ -206,6 +207,90 @@ function render(next) {
   renderScenario();
   if (!dirty) fillEditor();
 }
+
+function observedUIState() {
+  const active = document.activeElement;
+  const inlineOpen = $("inlineEdit").open;
+  const inspectorDraft = dirty
+    ? {
+        component_id: selected,
+        node_id: null,
+        base_revision: editRevision,
+        value: $("htmlFields").hidden
+          ? { title: $("title").value, body: $("body").value, color: $("color").value }
+          : $("htmlSource").value,
+      }
+    : null;
+  const inlineDraft = inlineOpen
+    ? {
+        component_id: inlineTarget.componentId,
+        node_id: inlineTarget.nodeId,
+        base_revision: inlineTarget.baseRevision,
+        value: $("inlineText").value,
+      }
+    : null;
+  const error = inlineOpen && $("inlineError").textContent
+    ? $("inlineError").textContent
+    : $("status").classList.contains("error")
+      ? $("status").textContent
+      : null;
+  const statusText = $("status").textContent;
+  return {
+    schema_version: 1,
+    selected_component_id: selected ?? null,
+    selected_scenario_id: selectedScenarioId,
+    open_panel: $("event").parentElement.open ? "event" : $("model").parentElement.open ? "model" : "none",
+    focus: active && active !== document.body ? active.id || active.tagName.toLowerCase() : null,
+    scroll: { app_x: Math.round(scrollX), app_y: Math.round(scrollY), canvas_x: Math.round($("canvas").scrollLeft), canvas_y: Math.round($("canvas").scrollTop) },
+    dirty,
+    running,
+    connection: $("connection").textContent.includes("Connected") ? "connected" : $("connection").textContent.includes("Reconnecting") ? "reconnecting" : "disconnected",
+    dialogs: [{ id: "inlineEdit", open: inlineOpen }],
+    editor: {
+      mode: inlineOpen ? "inline_text" : dirty ? "inspector_model" : "none",
+      draft: inlineDraft ?? inspectorDraft,
+      error,
+      rebase_available: inlineOpen && Boolean(error),
+    },
+    status: {
+      text: statusText,
+      tone: error ? "error" : running ? "pending" : /committed|validated|passed/i.test(statusText) ? "success" : "neutral",
+    },
+    controls: { undo_enabled: !$("undo").disabled, redo_enabled: !$("redo").disabled, run_enabled: !$("run").disabled },
+  };
+}
+
+if (evalMode) {
+  globalThis.__canvasEval = {
+    renderSnapshot(next, options = {}) {
+      if (options.scenarioId) selectedScenarioId = options.scenarioId;
+      if (options.selectedComponentId) selected = options.selectedComponentId;
+      render(next);
+    },
+    async sync() {
+      const next = await (await fetch("/api/state")).json();
+      render(next);
+      return next;
+    },
+    select(componentId) {
+      selected = componentId;
+      render(view);
+    },
+    openInline(componentId, nodeId, value, baseRevision = view.revision) {
+      const component = view.state.components.find((item) => item.id === componentId);
+      openInline(component, nodeId);
+      inlineTarget.baseRevision = baseRevision;
+      $("inlineText").value = value;
+    },
+    showError(message) {
+      status(message, true);
+    },
+    currentView() {
+      return { state: structuredClone(view.state), revision: view.revision };
+    },
+    observedUIState,
+  };
+}
 async function act(fn, message) {
   try {
     if ((await fn()) === false) return;
@@ -393,14 +478,18 @@ try {
   $("engine").querySelector("[value=dsh]").disabled = !initial.dshEnabled;
   render(initial);
   status("Ready. Edit the selected component or try an agent instruction.");
-  const events = new EventSource("/api/stream");
-  events.onmessage = (e) => render(JSON.parse(e.data));
-  events.onopen = () => {
+  if (evalMode) {
     $("connection").textContent = "● Connected";
-  };
-  events.onerror = () => {
-    $("connection").textContent = "Reconnecting…";
-  };
+  } else {
+    const events = new EventSource("/api/stream");
+    events.onmessage = (e) => render(JSON.parse(e.data));
+    events.onopen = () => {
+      $("connection").textContent = "● Connected";
+    };
+    events.onerror = () => {
+      $("connection").textContent = "Reconnecting…";
+    };
+  }
 } catch (error) {
   status(error.message, true);
 }

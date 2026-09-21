@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-case-v1",
+  "case_id": "audited-request/capture-off",
+  "scenario_id": "audited-request",
+  "example_id": "capture-off",
+  "title": "Run an auditable request without full capture",
+  "seed": 1601,
+  "generation": {
+    "mode": "execute_actions",
+    "parameterized_scenario": true
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "welcome",
+    "selected_scenario_id": "audited-request",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "paths": {
+    "expectations": "inputs/expectations.json",
+    "actions": "inputs/actions.jsonl",
+    "action_results": "execution/action-results.jsonl",
+    "events": "trajectory/events.jsonl",
+    "trajectory_blobs": "trajectory/blobs/sha256",
+    "id_aliases": "execution/id-aliases.json",
+    "captures": "observations/captures.jsonl",
+    "artifacts": "artifacts/sha256",
+    "assertions": "results/assertions.jsonl",
+    "summary": "results/summary.json"
+  },
+  "oracles": {
+    "structural": true,
+    "visual_regression": {
+      "enabled": false,
+      "baseline_manifest": null
+    },
+    "visual_quality": {
+      "enabled": true,
+      "rubric_version": "v1",
+      "blocking": false
+    }
+  },
+  "reproducibility": {
+    "semantic_fingerprint": "3abf1de9e08bb15bbba2f7ae6a490f22455492d3fd50c20178d295acf5266154",
+    "generated_id_strategy": "deterministic-provider",
+    "volatile_event_fields": [
+      "/event_id",
+      "/session_id",
+      "/timestamp"
+    ]
+  }
+}

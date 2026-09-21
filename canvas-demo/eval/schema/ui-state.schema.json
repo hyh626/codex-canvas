@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-ui-state:v1",
+  "title": "Observed Canvas UI state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "selected_component_id", "selected_scenario_id", "open_panel", "focus", "scroll", "dirty", "running", "connection", "dialogs", "editor", "status", "controls"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "selected_component_id": { "type": ["string", "null"] },
+    "selected_scenario_id": { "type": "string" },
+    "open_panel": { "enum": ["none", "event", "model"] },
+    "focus": { "type": ["string", "null"] },
+    "scroll": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["app_x", "app_y", "canvas_x", "canvas_y"],
+      "properties": {
+        "app_x": { "type": "integer" },
+        "app_y": { "type": "integer" },
+        "canvas_x": { "type": "integer" },
+        "canvas_y": { "type": "integer" }
+      }
+    },
+    "dirty": { "type": "boolean" },
+    "running": { "type": "boolean" },
+    "connection": { "enum": ["connected", "reconnecting", "disconnected"] },
+    "dialogs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "open"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "open": { "type": "boolean" }
+        }
+      }
+    },
+    "editor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "draft", "error", "rebase_available"],
+      "properties": {
+        "mode": { "enum": ["none", "inline_text", "inspector_model"] },
+        "draft": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["component_id", "node_id", "base_revision", "value"],
+              "properties": {
+                "component_id": { "type": "string", "minLength": 1 },
+                "node_id": { "type": ["string", "null"] },
+                "base_revision": { "type": "integer", "minimum": 0 },
+                "value": {}
+              }
+            }
+          ]
+        },
+        "error": { "type": ["string", "null"] },
+        "rebase_available": { "type": "boolean" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "none" } }, "required": ["mode"] },
+          "then": { "properties": { "draft": { "type": "null" } } },
+          "else": { "properties": { "draft": { "type": "object" } } }
+        }
+      ]
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "tone"],
+      "properties": {
+        "text": { "type": "string" },
+        "tone": { "enum": ["neutral", "success", "error", "pending"] }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["undo_enabled", "redo_enabled", "run_enabled"],
+      "properties": {
+        "undo_enabled": { "type": "boolean" },
+        "redo_enabled": { "type": "boolean" },
+        "run_enabled": { "type": "boolean" }
+      }
+    }
+  }
+}

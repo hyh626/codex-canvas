@@ -1,0 +1,241 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "component-lifecycle/nominal",
+  "initial_model": {
+    "components": [
+      {
+        "id": "alpha",
+        "title": "Alpha",
+        "body": "Duplicate this card.",
+        "color": "#6366f1"
+      },
+      {
+        "id": "omega",
+        "title": "Omega",
+        "body": "Keep this card unchanged.",
+        "color": "#0d9488"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "load-scenario-checkpoint",
+      "after_action_id": "load-scenario",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "scenario.started"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "alpha",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "omega",
+            "title": "Omega",
+            "body": "Keep this card unchanged.",
+            "color": "#0d9488"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "alpha",
+            "selected_scenario_id": "component-lifecycle",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "duplicate-alpha-checkpoint",
+      "after_action_id": "duplicate-alpha",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "alpha",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "card-01",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "omega",
+            "title": "Omega",
+            "body": "Keep this card unchanged.",
+            "color": "#0d9488"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "card-01",
+            "selected_scenario_id": "component-lifecycle",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "move-duplicate-checkpoint",
+      "after_action_id": "move-duplicate",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "alpha",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "omega",
+            "title": "Omega",
+            "body": "Keep this card unchanged.",
+            "color": "#0d9488"
+          },
+          {
+            "id": "card-01",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "card-01",
+            "selected_scenario_id": "component-lifecycle",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "delete-duplicate-checkpoint",
+      "after_action_id": "delete-duplicate",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "alpha",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "omega",
+            "title": "Omega",
+            "body": "Keep this card unchanged.",
+            "color": "#0d9488"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "alpha",
+            "selected_scenario_id": "component-lifecycle",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "undo-delete-checkpoint",
+      "after_action_id": "undo-delete",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "alpha",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "omega",
+            "title": "Omega",
+            "body": "Keep this card unchanged.",
+            "color": "#0d9488"
+          },
+          {
+            "id": "card-01",
+            "title": "Alpha",
+            "body": "Duplicate this card.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "alpha",
+            "selected_scenario_id": "component-lifecycle",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "undo-delete-checkpoint"
+}

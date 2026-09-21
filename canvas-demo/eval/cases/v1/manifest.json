@@ -1,0 +1,27 @@
+{
+  "format": "canvas-render-eval-input-manifest-v1",
+  "generator": "generate-cases.mjs",
+  "generator_version": "1",
+  "cases": [
+    "human-edit/nominal",
+    "human-edit/unicode-escape",
+    "human-edit/stale-conflict",
+    "comment-agent/nominal",
+    "comment-agent/body-anchor",
+    "comment-agent/invalid-proposal",
+    "shared-undo/nominal",
+    "shared-undo/branch-invalidation",
+    "shared-undo/restart",
+    "component-lifecycle/nominal",
+    "component-lifecycle/capacity",
+    "component-lifecycle/idempotent-retry",
+    "html-component/nominal",
+    "html-component/nested-unicode",
+    "html-component/security-error",
+    "audited-request/capture-off",
+    "audited-request/capture-on",
+    "audited-request/corrupt-reconstruction"
+  ],
+  "case_count": 18,
+  "examples_per_scenario": 3
+}

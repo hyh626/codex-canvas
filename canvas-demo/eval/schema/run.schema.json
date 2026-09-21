@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-run:v1",
+  "title": "Canvas model-to-render evaluation run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "run_id", "created_at", "source", "runtime", "defaults"],
+  "properties": {
+    "format": { "const": "canvas-render-eval-run-v1" },
+    "run_id": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "dirty", "model_schema", "event_schema_version"],
+      "properties": {
+        "repository": { "type": "string", "format": "uri" },
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "dirty": { "type": "boolean" },
+        "model_schema": { "type": "string", "minLength": 1 },
+        "event_schema_version": { "const": 1 }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "node", "browser", "os_image", "locale", "timezone", "color_scheme", "reduced_motion", "fonts"],
+      "properties": {
+        "runner": { "type": "string", "minLength": 1 },
+        "node": { "type": "string", "minLength": 1 },
+        "browser": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "version", "headless"],
+          "properties": {
+            "name": { "const": "chromium" },
+            "version": { "type": "string", "minLength": 1 },
+            "headless": { "const": true }
+          }
+        },
+        "os_image": { "type": "string", "minLength": 1 },
+        "locale": { "type": "string", "minLength": 1 },
+        "timezone": { "type": "string", "minLength": 1 },
+        "color_scheme": { "enum": ["light", "dark"] },
+        "reduced_motion": { "const": "reduce" },
+        "fonts": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["viewport", "surfaces", "capture_modes", "event_capture_phase", "comparison"],
+      "properties": {
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "device_scale_factor"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 320 },
+            "height": { "type": "integer", "minimum": 320 },
+            "device_scale_factor": { "type": "number", "minimum": 1, "maximum": 4 }
+          }
+        },
+        "surfaces": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "enum": ["app", "canvas"] },
+          "contains": { "const": "canvas" }
+        },
+        "capture_modes": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 2,
+          "items": { "enum": ["event_replay", "live_checkpoint"] },
+          "contains": { "const": "event_replay" }
+        },
+        "event_capture_phase": { "const": "after_event" },
+        "comparison": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["raw_trajectory", "cross_run"],
+          "properties": {
+            "raw_trajectory": { "const": "byte-exact-within-run" },
+            "cross_run": { "const": "semantic-fingerprint-plus-render-artifacts" }
+          }
+        }
+      }
+    }
+  }
+}

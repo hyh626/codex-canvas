@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-case-v1",
+  "case_id": "shared-undo/branch-invalidation",
+  "scenario_id": "shared-undo",
+  "example_id": "branch-invalidation",
+  "title": "Invalidate redo after a new branch",
+  "seed": 1302,
+  "generation": {
+    "mode": "execute_actions",
+    "parameterized_scenario": true
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "welcome",
+    "selected_scenario_id": "shared-undo",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "paths": {
+    "expectations": "inputs/expectations.json",
+    "actions": "inputs/actions.jsonl",
+    "action_results": "execution/action-results.jsonl",
+    "events": "trajectory/events.jsonl",
+    "trajectory_blobs": "trajectory/blobs/sha256",
+    "id_aliases": "execution/id-aliases.json",
+    "captures": "observations/captures.jsonl",
+    "artifacts": "artifacts/sha256",
+    "assertions": "results/assertions.jsonl",
+    "summary": "results/summary.json"
+  },
+  "oracles": {
+    "structural": true,
+    "visual_regression": {
+      "enabled": false,
+      "baseline_manifest": null
+    },
+    "visual_quality": {
+      "enabled": true,
+      "rubric_version": "v1",
+      "blocking": false
+    }
+  },
+  "reproducibility": {
+    "semantic_fingerprint": "47cb79f36b6c8edbb849e4d74f2d4806a42f2f3de96ab36b2e94587936e8984b",
+    "generated_id_strategy": "deterministic-provider",
+    "volatile_event_fields": [
+      "/event_id",
+      "/session_id",
+      "/timestamp"
+    ]
+  }
+}

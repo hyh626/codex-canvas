@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-id-aliases:v1",
+  "title": "Stable aliases for cross-run semantic comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "case_id", "references_preserved", "event_reference_paths", "derived_value_paths", "mappings"],
+  "properties": {
+    "format": { "const": "canvas-render-eval-id-aliases-v1" },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "references_preserved": { "const": true },
+    "event_reference_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 5,
+      "items": {
+        "enum": ["/event_id", "/caused_by/*", "/payload/target", "/payload/request_event_id", "/payload/command_id"]
+      },
+      "allOf": [
+        { "contains": { "const": "/event_id" } },
+        { "contains": { "const": "/caused_by/*" } },
+        { "contains": { "const": "/payload/target" } },
+        { "contains": { "const": "/payload/request_event_id" } },
+        { "contains": { "const": "/payload/command_id" } }
+      ]
+    },
+    "derived_value_paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "comparison"],
+        "properties": {
+          "path": { "const": "/payload/fingerprint" },
+          "comparison": { "const": "recompute_from_canonical_projection" }
+        }
+      },
+      "minItems": 1,
+      "contains": {
+        "type": "object",
+        "properties": { "path": { "const": "/payload/fingerprint" } },
+        "required": ["path"]
+      }
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "actual_id", "alias", "defined_at_seq"],
+        "properties": {
+          "kind": { "enum": ["event", "component", "session", "command"] },
+          "actual_id": { "type": "string", "minLength": 1 },
+          "alias": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+          "defined_at_seq": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

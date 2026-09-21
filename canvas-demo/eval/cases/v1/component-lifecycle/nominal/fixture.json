@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "id": "alpha",
+      "title": "Alpha",
+      "body": "Duplicate this card.",
+      "color": "#6366f1"
+    },
+    {
+      "id": "omega",
+      "title": "Omega",
+      "body": "Keep this card unchanged.",
+      "color": "#0d9488"
+    }
+  ]
+}
