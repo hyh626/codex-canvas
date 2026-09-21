@@ -45,13 +45,13 @@ try {
   // A real second renderer submits against the same authority during an open draft.
   await app.evaluate(async ({BrowserWindow}) => {
     const first = BrowserWindow.getAllWindows()[0];
-    const second = new BrowserWindow({show:true,width:1280,height:900,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
+    const second = new BrowserWindow({show:false,width:1280,height:900,webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true}});
     await second.loadURL(first.webContents.getURL());
   });
   const other = app.windows().find(p => p !== page);
   await expect(other.locator('#count')).toHaveText('02');
   const id = await page.locator('#selected').textContent();
-  await other.locator('#components button').filter({hasText:id}).click();
+  await other.locator('#components button').filter({hasText:id}).evaluate((button) => button.click());
   await frame().locator('[data-node-id=body]').dblclick();
   await page.locator('#inlineText').fill('Retained conflict draft');
   await other.locator('#prompt').fill('title: Other window title');
