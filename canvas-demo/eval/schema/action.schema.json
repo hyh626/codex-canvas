@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-action:v1",
+  "title": "Canvas evaluation driver action",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "action_id", "step", "kind", "driver", "input", "expectation_checkpoint_id", "live_capture_points"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "action_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+    "step": { "type": "integer", "minimum": 1 },
+    "kind": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "driver": { "enum": ["api", "ui", "engine"] },
+    "input": { "type": "object" },
+    "expectation_checkpoint_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+    "live_capture_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "ready_when"],
+        "properties": {
+          "phase": { "enum": ["before", "during", "after", "conflict", "error"] },
+          "ready_when": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signal"],
+            "properties": {
+              "signal": { "enum": ["render_idle", "loading_visible", "conflict_visible", "error_visible", "selector_visible"] },
+              "selector": { "type": "string", "minLength": 1 },
+              "text": { "type": "string" }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "signal": { "const": "selector_visible" } }, "required": ["signal"] },
+                "then": { "required": ["selector"] }
+              }
+            ]
+          },
+          "response_gate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "pause_at", "release"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+              "pause_at": { "const": "before_model_commit" },
+              "release": { "const": "after_capture" }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "phase": { "const": "during" } }, "required": ["phase"] },
+            "then": {
+              "required": ["response_gate"],
+              "properties": {
+                "ready_when": {
+                  "properties": {
+                    "signal": { "enum": ["loading_visible", "selector_visible"] }
+                  }
+                }
+              }
+            },
+            "else": { "not": { "required": ["response_gate"] } }
+          }
+        ]
+      }
+    }
+  }
+}

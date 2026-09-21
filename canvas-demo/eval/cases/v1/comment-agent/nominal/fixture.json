@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "welcome",
+      "title": "A rough direction",
+      "body": "Comments are durable model context, not prompt-only UI state.",
+      "color": "#6366f1"
+    }
+  ]
+}

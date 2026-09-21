@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "case_id": "html-component/nested-unicode",
+  "scenario_id": "html-component",
+  "example_id": "nested-unicode",
+  "title": "Edit a nested HTML leaf with long Unicode text",
+  "seed": 1502,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "hero",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": null,
+  "tags": [
+    "p0",
+    "html",
+    "unicode"
+  ]
+}

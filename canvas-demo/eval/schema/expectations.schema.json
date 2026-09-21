@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-expectations:v1",
+  "title": "Independent expectations for one Canvas CUJ example",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "case_id", "initial_model", "checkpoints", "final_checkpoint_id"],
+  "properties": {
+    "format": { "const": "canvas-render-eval-expectations-v1" },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "initial_model": { "type": "object" },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkpoint_id", "after_action_id", "expected_action_status", "expected_events", "expected_model", "invariants", "live_checkpoints"],
+        "properties": {
+          "checkpoint_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+          "after_action_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+          "expected_action_status": { "enum": ["succeeded", "rejected", "failed"] },
+          "expected_events": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["sequence", "allow_additional"],
+            "properties": {
+              "sequence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "allow_additional": { "type": "boolean" }
+            }
+          },
+          "expected_model": { "type": "object" },
+          "invariants": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/invariant" }
+          },
+          "live_checkpoints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["phase", "expected_ui", "invariants"],
+              "properties": {
+                "phase": { "enum": ["before", "during", "after", "conflict", "error"] },
+                "expected_ui": { "$ref": "#/$defs/uiExpectation" },
+                "invariants": {
+                  "type": "array",
+                  "items": { "$ref": "#/$defs/invariant" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "final_checkpoint_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" }
+  },
+  "$defs": {
+    "uiExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "selected_component_id": { "type": ["string", "null"] },
+        "selected_scenario_id": { "type": "string" },
+        "open_panel": { "enum": ["none", "event", "model"] },
+        "focus": { "type": ["string", "null"] },
+        "scroll": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "app_x": { "type": "integer" },
+            "app_y": { "type": "integer" },
+            "canvas_x": { "type": "integer" },
+            "canvas_y": { "type": "integer" }
+          }
+        },
+        "dirty": { "type": "boolean" },
+        "running": { "type": "boolean" },
+        "connection": { "enum": ["connected", "reconnecting", "disconnected"] },
+        "dialogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "open"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "open": { "type": "boolean" }
+            }
+          }
+        },
+        "editor": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "mode": { "enum": ["none", "inline_text", "inspector_model"] },
+            "draft": {
+              "anyOf": [
+                { "type": "null" },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "properties": {
+                    "component_id": { "type": "string", "minLength": 1 },
+                    "node_id": { "type": ["string", "null"] },
+                    "base_revision": { "type": "integer", "minimum": 0 },
+                    "value": {}
+                  }
+                }
+              ]
+            },
+            "error": { "type": ["string", "null"] },
+            "rebase_available": { "type": "boolean" }
+          }
+        },
+        "status": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "text": { "type": "string" },
+            "tone": { "enum": ["neutral", "success", "error", "pending"] }
+          }
+        },
+        "controls": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "undo_enabled": { "type": "boolean" },
+            "redo_enabled": { "type": "boolean" },
+            "run_enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "invariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "operator", "path"],
+      "properties": {
+        "scope": { "enum": ["model", "event", "ui", "request"] },
+        "operator": { "enum": ["equals", "unchanged", "exists", "absent", "contains", "count-equals"] },
+        "path": { "type": "string", "pattern": "^(?:|/(?:[^~/]|~0|~1)*)+$" },
+        "value": {},
+        "compare_to": {
+          "enum": ["model_pre_action", "previous_model_checkpoint", "initial_model", "pre_action_ui", "previous_live_checkpoint"]
+        },
+        "event_match": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "occurrence"],
+          "properties": {
+            "type": { "type": "string", "minLength": 1 },
+            "occurrence": { "enum": ["first", "last", "all", "exact_one"] }
+          }
+        },
+        "event_scope": { "enum": ["current_action", "case_through_checkpoint"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "operator": { "enum": ["equals", "contains", "count-equals"] } }, "required": ["operator"] },
+          "then": { "required": ["value"] }
+        },
+        {
+          "if": { "properties": { "operator": { "const": "unchanged" } }, "required": ["operator"] },
+          "then": {
+            "required": ["compare_to"],
+            "not": { "required": ["value"] }
+          },
+          "else": { "not": { "required": ["compare_to"] } }
+        },
+        {
+          "if": { "properties": { "scope": { "enum": ["event", "request"] } }, "required": ["scope"] },
+          "then": { "required": ["event_match", "event_scope"] },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["event_match"] },
+                { "required": ["event_scope"] }
+              ]
+            }
+          }
+        },
+        {
+          "if": { "properties": { "operator": { "enum": ["exists", "absent"] } }, "required": ["operator"] },
+          "then": { "not": { "required": ["value"] } }
+        },
+        {
+          "if": {
+            "properties": { "operator": { "const": "count-equals" } },
+            "required": ["operator"]
+          },
+          "then": { "properties": { "value": { "type": "integer", "minimum": 0 } } }
+        },
+        {
+          "if": {
+            "properties": { "scope": { "const": "model" }, "operator": { "const": "unchanged" } },
+            "required": ["scope", "operator"]
+          },
+          "then": {
+            "properties": {
+              "compare_to": { "enum": ["model_pre_action", "previous_model_checkpoint", "initial_model"] }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "scope": { "const": "ui" }, "operator": { "const": "unchanged" } },
+            "required": ["scope", "operator"]
+          },
+          "then": {
+            "properties": {
+              "compare_to": { "enum": ["pre_action_ui", "previous_live_checkpoint"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "operator": { "const": "unchanged" } }, "required": ["operator"] },
+          "then": { "properties": { "scope": { "enum": ["model", "ui"] } } }
+        }
+      ]
+    }
+  }
+}

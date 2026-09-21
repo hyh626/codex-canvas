@@ -28,6 +28,8 @@ More journeys: create/duplicate cards, direct canvas text editing, reorder, dele
 
 The browser now exposes six repeatable product scenarios: human node editing, comment-to-agent, shared human/agent Undo, component lifecycle, HTML node/layout editing, and audited model requests. **Load / restart** commits a deterministic fixture through the server and appends `scenario.started`; it never erases the trajectory. Step progress is derived from the committed model and subsequent events. `scenarios.mjs` is the shared source for fixtures, instructions and acceptance predicates, and a new scenario also scopes model context so earlier comments cannot leak into the run.
 
+The proposed model-to-render evaluation bundle is specified in [eval/FORMAT.zh-CN.md](eval/FORMAT.zh-CN.md). It combines per-event replay outcomes with real UI checkpoints, independent expected models, iframe evidence, content-addressed screenshots and reviewable assertions. Render failures remain valid evidence and fail the case instead of making the bundle unwritable.
+
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot
@@ -118,7 +120,7 @@ requires real authentication, tenant isolation and a database before exposing th
 - `test/`: restart/replay, stale write rejection, retries, undo/redo, blob tampering,
   exact archive roundtrip, HTTP loop, and fake app-server protocol coverage.
 
-26 Node integration/unit tests pass, including CUJ fixture/context isolation, HTML HTTP editing, layout, conflict, restart,
+49 Node integration/unit tests pass, including eval schema and semantic-validation fixtures, CUJ fixture/context isolation, HTML HTTP editing, layout, conflict, restart,
 and shared Codex/DSH protocol fixtures. The Electron CUJ script is provided with Linux/macOS/Windows CI.
 Local Electron crashed with SIGSEGV before opening its first window; desktop UI and real-model
 acceptance remain unverified. No upstream Rust files changed. Repository `just fmt` was attempted

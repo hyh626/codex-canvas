@@ -21,6 +21,8 @@ npm start
 
 Agent 上下文以最近一次 `scenario.started` 为边界，因此旧场景的评论和修改不会污染新场景。场景定义、初始模型和验收条件集中在 `scenarios.mjs`，UI 和服务端使用同一份定义。
 
+Model-to-render eval bundle 设计见 [eval/FORMAT.zh-CN.md](eval/FORMAT.zh-CN.md)。它同时保存逐 event replay outcome 和真实 UI checkpoint，并用独立 expected model、iframe 证据、内容寻址截图与断言判断结果；渲染失败也能作为合法证据保存并让 case 失败。
+
 ## 更多可体验流程
 
 见 [九条 CUJ 操作与验收指南](CUJ.zh-CN.md)：直接编辑、新建与复制、排序、删除与恢复、评论交给 agent、跨窗口冲突、人机共同撤销、重启恢复、请求审计与导出。每条都说明操作步骤、模型变化与边界。
@@ -92,7 +94,7 @@ Agent 上下文以最近一次 `scenario.started` 为边界，因此旧场景的
 
 ## 已验证与未验证
 
-26 项 Node 测试全部通过：CUJ fixture 加载和上下文隔离、编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex/DSH 协议 fixture、网关请求重建与拒绝转发。
+31 项 Node 测试全部通过：eval schema 成功/失败样例、CUJ fixture 加载和上下文隔离、编辑/撤销/重做/重启、版本冲突、幂等重试、非法模型、blob 篡改、导出完整恢复、HTTP 交互、Codex/DSH 协议 fixture、网关请求重建与拒绝转发。
 
 
 **尚未验证**：真实模型调用、macOS/Windows 安装包、桌面 UI 完整流程。已提供 `npm run test:desktop` 及三平台 CI；本地 Electron 在创建窗口前 SIGSEGV，不能视为桌面验收通过。测试详情见 HTML CUJ 文档。
