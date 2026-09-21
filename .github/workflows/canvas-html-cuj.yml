@@ -26,6 +26,9 @@ jobs:
           cache: npm
           cache-dependency-path: canvas-demo/package-lock.json
       - run: npm ci
+      - name: Install Playwright Chromium
+        if: runner.os != 'Linux'
+        run: npx playwright install chromium
       - run: npm test
       - name: Linux desktop CUJ
         if: runner.os == 'Linux'

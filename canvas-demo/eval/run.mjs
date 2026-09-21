@@ -420,15 +420,24 @@ export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(
   const selected = caseIds?.length ? caseIds : manifest.cases;
   const output = path.join(runsRoot, id);
   fs.mkdirSync(output, { recursive: true });
-  const originalGetuid = process.getuid;
   let executablePath;
-  try {
-    if (originalGetuid) process.getuid = () => -1;
-    executablePath = await containerChromium.executablePath();
-  } finally {
-    if (originalGetuid) process.getuid = originalGetuid;
+  let chromiumArgs = [];
+  if (process.platform === "linux") {
+    const originalGetuid = process.getuid;
+    try {
+      if (originalGetuid) process.getuid = () => -1;
+      executablePath = await containerChromium.executablePath();
+      chromiumArgs = containerChromium.args;
+    } finally {
+      if (originalGetuid) process.getuid = originalGetuid;
+    }
+  } else {
+    executablePath = chromium.executablePath();
+    if (!fs.existsSync(executablePath)) {
+      throw Error(`Playwright Chromium is not installed for ${process.platform}; run "npx playwright install chromium"`);
+    }
   }
-  const launchBrowser = () => chromium.launch({ executablePath, headless: true, args: containerChromium.args });
+  const launchBrowser = () => chromium.launch({ executablePath, headless: true, args: chromiumArgs });
   let browser = await launchBrowser();
   const browserVersion = browser.version();
   const run = {
