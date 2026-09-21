@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-case-v1",
+  "case_id": "component-lifecycle/idempotent-retry",
+  "scenario_id": "component-lifecycle",
+  "example_id": "idempotent-retry",
+  "title": "Apply a retried command only once",
+  "seed": 1403,
+  "generation": {
+    "mode": "execute_actions",
+    "parameterized_scenario": true
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "alpha",
+    "selected_scenario_id": "component-lifecycle",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "paths": {
+    "expectations": "inputs/expectations.json",
+    "actions": "inputs/actions.jsonl",
+    "action_results": "execution/action-results.jsonl",
+    "events": "trajectory/events.jsonl",
+    "trajectory_blobs": "trajectory/blobs/sha256",
+    "id_aliases": "execution/id-aliases.json",
+    "captures": "observations/captures.jsonl",
+    "artifacts": "artifacts/sha256",
+    "assertions": "results/assertions.jsonl",
+    "summary": "results/summary.json"
+  },
+  "oracles": {
+    "structural": true,
+    "visual_regression": {
+      "enabled": false,
+      "baseline_manifest": null
+    },
+    "visual_quality": {
+      "enabled": true,
+      "rubric_version": "v1",
+      "blocking": false
+    }
+  },
+  "reproducibility": {
+    "semantic_fingerprint": "2e561b6d5c06466017dd3e36c6e2b06566f2348d4240803d4837c3acb26287bb",
+    "generated_id_strategy": "deterministic-provider",
+    "volatile_event_fields": [
+      "/event_id",
+      "/session_id",
+      "/timestamp"
+    ]
+  }
+}

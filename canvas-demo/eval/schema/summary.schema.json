@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-summary:v1",
+  "title": "Canvas render evaluation case summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "case_id", "status", "coverage", "counts", "final", "timing_ms", "failures"],
+  "properties": {
+    "format": { "const": "canvas-render-eval-summary-v1" },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "status": { "enum": ["pass", "fail", "incomplete"] },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["events", "live_checkpoints"],
+      "properties": {
+        "events": { "$ref": "#/$defs/coverage" },
+        "live_checkpoints": { "$ref": "#/$defs/coverage" }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actions", "captures_ok", "captures_failed", "assertions", "required_failed"],
+      "properties": {
+        "actions": { "type": "integer", "minimum": 0 },
+        "captures_ok": { "type": "integer", "minimum": 0 },
+        "captures_failed": { "type": "integer", "minimum": 0 },
+        "assertions": { "type": "integer", "minimum": 0 },
+        "required_failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "final": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event_seq", "revision", "model_hash"],
+          "properties": {
+            "event_seq": { "type": "integer", "minimum": 1 },
+            "revision": { "type": "integer", "minimum": 0 },
+            "model_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
+    "failure_stage": { "enum": ["setup", "execute", "export", "replay", "oracle", "report"] },
+    "run_error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "message"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    },
+    "timing_ms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["execute", "replay_render", "oracles"],
+      "properties": {
+        "execute": { "type": "number", "minimum": 0 },
+        "replay_render": { "type": "number", "minimum": 0 },
+        "oracles": { "type": "number", "minimum": 0 }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assertion_id", "message"],
+        "properties": {
+          "assertion_id": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "pass" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "final": { "type": "object" },
+          "coverage": {
+            "properties": {
+              "events": { "properties": { "complete": { "const": true } } },
+              "live_checkpoints": { "properties": { "complete": { "const": true } } }
+            }
+          },
+          "counts": {
+            "properties": {
+              "captures_failed": { "const": 0 },
+              "required_failed": { "const": 0 }
+            }
+          },
+          "failures": { "maxItems": 0 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "final": { "type": "null" } }, "required": ["final"] },
+      "then": {
+        "required": ["failure_stage", "run_error"],
+        "properties": { "status": { "enum": ["fail", "incomplete"] } }
+      }
+    }
+  ],
+  "$defs": {
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected", "captured", "complete"],
+      "properties": {
+        "expected": { "type": "integer", "minimum": 0 },
+        "captured": { "type": "integer", "minimum": 0 },
+        "complete": { "type": "boolean" }
+      }
+    }
+  }
+}

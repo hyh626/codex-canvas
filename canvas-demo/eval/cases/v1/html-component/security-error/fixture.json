@@ -1,0 +1,9 @@
+{
+  "components": [
+    {
+      "id": "hero",
+      "kind": "html",
+      "html": "<article data-node-id=\"root\" style=\"display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px\">\n  <header data-node-id=\"heading\"><small data-node-id=\"eyebrow\">CUJ PLAYGROUND</small><h2 data-node-id=\"title\">A shared HTML component</h2></header>\n  <section data-node-id=\"content\"><p data-node-id=\"body\">Edit this node, then ask the agent to change the layout.</p><ul data-node-id=\"features\"><li data-node-id=\"feature-one\">Stable comment anchors</li><li data-node-id=\"feature-two\">One shared history</li></ul></section>\n</article>"
+    }
+  ]
+}

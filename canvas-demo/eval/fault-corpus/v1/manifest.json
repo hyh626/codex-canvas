@@ -1,0 +1,20 @@
+{
+  "format": "canvas-render-eval-fault-manifest-v1",
+  "faults": [
+    "gate-provider-before-pause",
+    "gate-cancel-after-pause",
+    "gate-capture-timeout",
+    "gate-release-failed",
+    "gate-crash-before-outcome",
+    "gate-crash-after-outcome",
+    "capture-tail-moved",
+    "capture-render-error",
+    "browser-startup-failure",
+    "invalid-capture-owner",
+    "invalid-gate-order",
+    "invalid-cutoff-regression"
+  ],
+  "fault_count": 12,
+  "valid_fault_count": 9,
+  "invalid_mutation_count": 3
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-case-spec:v1",
+  "title": "Deterministic input specification for one Canvas CUJ example",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "scenario_id",
+    "example_id",
+    "title",
+    "seed",
+    "fixture",
+    "expectations",
+    "actions",
+    "viewport",
+    "view_policy",
+    "fault_profile",
+    "tags"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "scenario_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "example_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "seed": { "type": "integer", "minimum": 0 },
+    "fixture": { "const": "fixture.json" },
+    "expectations": { "const": "expectations.json" },
+    "actions": { "const": "actions.jsonl" },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "device_scale_factor"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 320, "maximum": 7680 },
+        "height": { "type": "integer", "minimum": 320, "maximum": 4320 },
+        "device_scale_factor": { "type": "number", "minimum": 1, "maximum": 4 }
+      }
+    },
+    "view_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected_component_id", "open_panel", "focus", "scroll"],
+      "properties": {
+        "selected_component_id": { "type": ["string", "null"] },
+        "open_panel": { "enum": ["none", "event", "model"] },
+        "focus": { "type": ["string", "null"] },
+        "scroll": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["app_x", "app_y", "canvas_x", "canvas_y"],
+          "properties": {
+            "app_x": { "type": "integer" },
+            "app_y": { "type": "integer" },
+            "canvas_x": { "type": "integer" },
+            "canvas_y": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "fault_profile": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "stage", "outcome"],
+          "properties": {
+            "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+            "stage": { "enum": ["input", "provider", "commit", "capture", "browser", "reconstruction"] },
+            "outcome": { "enum": ["rejected", "failed", "blocked", "incomplete"] }
+          }
+        }
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "case_id": { "pattern": "^[^/]+/[^/]+$" } }, "required": ["case_id"] },
+      "then": {
+        "properties": {
+          "scenario_id": { "pattern": "^[a-z][a-z0-9-]*$" },
+          "example_id": { "pattern": "^[a-z][a-z0-9-]*$" }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "stage": "provider",
+  "fault": "gate-provider-before-pause"
+}

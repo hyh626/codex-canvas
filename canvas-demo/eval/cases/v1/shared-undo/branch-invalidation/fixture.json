@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "welcome",
+      "title": "Baseline",
+      "body": "Human and agent commits use the same history.",
+      "color": "#6366f1"
+    }
+  ]
+}

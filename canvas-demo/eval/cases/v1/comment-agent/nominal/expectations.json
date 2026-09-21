@@ -1,0 +1,130 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "comment-agent/nominal",
+  "initial_model": {
+    "components": [
+      {
+        "id": "welcome",
+        "title": "A rough direction",
+        "body": "Comments are durable model context, not prompt-only UI state.",
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "load-scenario-checkpoint",
+      "after_action_id": "load-scenario",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "scenario.started"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "A rough direction",
+            "body": "Comments are durable model context, not prompt-only UI state.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "comment-agent",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "comment-title-checkpoint",
+      "after_action_id": "comment-title",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "comment.created"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "A rough direction",
+            "body": "Comments are durable model context, not prompt-only UI state.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "comment-agent",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "agent-title-checkpoint",
+      "after_action_id": "agent-title",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "model.request_prepared",
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "Build together",
+            "body": "Comments are durable model context, not prompt-only UI state.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "during",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "comment-agent",
+            "connection": "connected",
+            "running": true
+          },
+          "invariants": []
+        },
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "comment-agent",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "agent-title-checkpoint"
+}

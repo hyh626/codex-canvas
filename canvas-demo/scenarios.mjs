@@ -171,7 +171,7 @@ export const scenarios = [
       {
         label: "Double-click the title and commit “A shared launch”.",
         done: ({ state, events }) =>
-          state.components[0]?.html.includes(">A shared launch</h2>") &&
+          state.components[0]?.html?.includes(">A shared launch</h2>") &&
           commit(events, "human"),
       },
       {

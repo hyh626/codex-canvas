@@ -9,6 +9,9 @@ export function componentCommand(store, data) {
     componentId,
     nodeId,
     text,
+    title,
+    body,
+    color,
     direction,
     baseRevision,
     commandId,
@@ -19,6 +22,9 @@ export function componentCommand(store, data) {
       componentId,
       nodeId,
       text,
+      title,
+      body,
+      color,
       direction,
       baseRevision,
     }),
@@ -52,9 +58,9 @@ export function componentCommand(store, data) {
     case "create":
       state.components.push({
         id: `card-${randomUUID().slice(0, 8)}`,
-        title: "Untitled idea",
-        body: "Add your next thought here.",
-        color: "#6366f1",
+        title: title ?? "Untitled idea",
+        body: body ?? "Add your next thought here.",
+        color: color ?? "#6366f1",
       });
       break;
     case "duplicate":

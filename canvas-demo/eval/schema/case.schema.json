@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-case:v1",
+  "title": "Canvas model-to-render evaluation case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "case_id", "scenario_id", "example_id", "title", "seed", "generation", "viewport", "view_policy", "paths", "oracles", "reproducibility"],
+  "properties": {
+    "format": { "const": "canvas-render-eval-case-v1" },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "scenario_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "example_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "seed": { "type": "integer", "minimum": 0 },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "parameterized_scenario"],
+      "properties": {
+        "mode": { "const": "execute_actions" },
+        "parameterized_scenario": { "const": true }
+      }
+    },
+    "viewport": { "$ref": "#/$defs/viewport" },
+    "view_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected_component_id", "selected_scenario_id", "open_panel", "scroll", "focus"],
+      "properties": {
+        "selected_component_id": { "type": "string" },
+        "selected_scenario_id": { "type": "string" },
+        "open_panel": { "enum": ["none", "event", "model"] },
+        "focus": { "type": ["string", "null"] },
+        "scroll": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["app_x", "app_y", "canvas_x", "canvas_y"],
+          "properties": {
+            "app_x": { "type": "integer" },
+            "app_y": { "type": "integer" },
+            "canvas_x": { "type": "integer" },
+            "canvas_y": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectations", "actions", "action_results", "events", "trajectory_blobs", "id_aliases", "captures", "artifacts", "assertions", "summary"],
+      "properties": {
+        "expectations": { "$ref": "#/$defs/relativePath" },
+        "actions": { "$ref": "#/$defs/relativePath" },
+        "action_results": { "$ref": "#/$defs/relativePath" },
+        "events": { "$ref": "#/$defs/relativePath" },
+        "trajectory_blobs": { "$ref": "#/$defs/relativePath" },
+        "id_aliases": { "$ref": "#/$defs/relativePath" },
+        "captures": { "$ref": "#/$defs/relativePath" },
+        "artifacts": { "$ref": "#/$defs/relativePath" },
+        "assertions": { "$ref": "#/$defs/relativePath" },
+        "summary": { "$ref": "#/$defs/relativePath" }
+      }
+    },
+    "oracles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["structural", "visual_regression", "visual_quality"],
+      "properties": {
+        "structural": { "type": "boolean" },
+        "visual_regression": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "baseline_manifest"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "baseline_manifest": { "anyOf": [{ "$ref": "#/$defs/ref" }, { "type": "null" }] }
+          }
+        },
+        "visual_quality": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "rubric_version", "blocking"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "rubric_version": { "type": "string", "minLength": 1 },
+            "blocking": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semantic_fingerprint", "generated_id_strategy", "volatile_event_fields"],
+      "properties": {
+        "semantic_fingerprint": { "$ref": "#/$defs/hash" },
+        "generated_id_strategy": { "enum": ["deterministic-provider", "semantic-alias-map"] },
+        "volatile_event_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["/event_id", "/session_id", "/timestamp"] }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "oracles": {
+            "properties": {
+              "visual_regression": {
+                "properties": { "enabled": { "const": true } },
+                "required": ["enabled"]
+              }
+            },
+            "required": ["visual_regression"]
+          }
+        },
+        "required": ["oracles"]
+      },
+      "then": {
+        "properties": {
+          "reproducibility": {
+            "properties": { "generated_id_strategy": { "const": "deterministic-provider" } },
+            "required": ["generated_id_strategy"]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes", "media_type"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/hash" },
+        "path": { "type": "string", "pattern": "^[a-f0-9]{64}\\.[a-z0-9]+$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "media_type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "^(?:/|[A-Za-z]:|.*(?:^|/)\\.\\.(?:/|$))" }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "device_scale_factor"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 320, "maximum": 7680 },
+        "height": { "type": "integer", "minimum": 320, "maximum": 4320 },
+        "device_scale_factor": { "type": "number", "minimum": 1, "maximum": 4 }
+      }
+    }
+  }
+}

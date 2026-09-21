@@ -1,0 +1,6 @@
+{
+  "kind": "valid-fault",
+  "bundle_valid": true,
+  "summary_status": "release_failed",
+  "terminal_observation": "gate_release_failed"
+}
