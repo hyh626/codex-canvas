@@ -99,6 +99,10 @@ export function createApp({
         );
         return send(200, store.export());
       }
+      if (req.method === "GET" && url.pathname === "/favicon.ico") {
+        res.writeHead(204);
+        return res.end();
+      }
       if (
         req.method === "GET" &&
         ["/", "/app.js", "/html-ui.js", "/style.css", "/scenarios.js"].includes(
