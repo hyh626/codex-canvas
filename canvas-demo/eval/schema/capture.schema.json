@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:canvas-demo:render-eval-capture:v1",
+  "title": "Canvas render capture outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "capture_id", "case_id", "mode", "status", "trigger"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "capture_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+@[a-z0-9-]+$" },
+    "case_id": { "type": "string", "pattern": "^[a-z0-9-]+/[a-z0-9-]+$" },
+    "mode": { "enum": ["event_replay", "live_checkpoint"] },
+    "status": { "enum": ["ok", "timeout", "render_error", "blocked"] },
+    "trigger": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": {
+            "event": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["seq", "event_id", "type", "phase"],
+              "properties": {
+                "seq": { "type": "integer", "minimum": 1 },
+                "event_id": { "type": "string", "minLength": 1 },
+                "type": { "type": "string", "minLength": 1 },
+                "phase": { "const": "after_event" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": {
+            "action": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["action_id", "phase"],
+              "properties": {
+                "action_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,63}$" },
+                "phase": { "enum": ["before", "during", "after", "conflict", "error"] },
+                "event_seq_at_capture": {
+                  "anyOf": [
+                    { "type": "integer", "minimum": 0 },
+                    { "type": "null" }
+                  ]
+                },
+                "event_seq_after_capture": {
+                  "anyOf": [
+                    { "type": "integer", "minimum": 0 },
+                    { "type": "null" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "events_through_seq": { "type": "integer", "minimum": 1 },
+        "revision": { "type": "integer", "minimum": 0 },
+        "model": { "$ref": "#/$defs/ref" },
+        "model_hash": { "$ref": "#/$defs/hash" },
+        "ui_state": { "$ref": "#/$defs/ref" }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "renderer_seq": { "type": "integer", "minimum": 0 },
+            "fonts_ready": { "type": "boolean" },
+            "pending_requests": { "type": "integer", "minimum": 0 },
+            "animation_frames_waited": { "type": "integer", "minimum": 0 },
+            "iframes_expected": { "type": "integer", "minimum": 0 },
+            "iframes_ready": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "captures": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capture" }
+        },
+        "dom": { "$ref": "#/$defs/ref" },
+        "accessibility": { "$ref": "#/$defs/ref" },
+        "console": { "$ref": "#/$defs/ref" },
+        "iframes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["component_id", "selector", "status"],
+            "properties": {
+              "component_id": { "type": "string" },
+              "selector": { "type": "string" },
+              "status": { "enum": ["ready", "timeout", "error"] },
+              "dom": { "$ref": "#/$defs/ref" },
+              "layout": { "$ref": "#/$defs/ref" },
+              "error": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name", "message"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "message": { "type": "string" }
+                }
+              }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "status": { "const": "ready" } }, "required": ["status"] },
+                "then": { "required": ["dom", "layout"] },
+                "else": { "required": ["error"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "name", "message"],
+      "properties": {
+        "stage": { "enum": ["replay", "navigation", "stability", "capture", "artifact_write"] },
+        "name": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "size_bytes", "media_type"],
+      "properties": {
+        "sha256": { "$ref": "#/$defs/hash" },
+        "path": { "type": "string", "pattern": "^[a-f0-9]{64}\\.[a-z0-9]+$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "media_type": { "type": "string", "minLength": 1 }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "artifact", "width", "height"],
+      "properties": {
+        "surface": { "enum": ["app", "canvas", "component"] },
+        "selector": { "type": "string" },
+        "component_id": { "type": "string" },
+        "artifact": {
+          "allOf": [
+            { "$ref": "#/$defs/ref" },
+            { "type": "object", "properties": { "media_type": { "const": "image/png" } } }
+          ]
+        },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "event_replay" } }, "required": ["mode"] },
+      "then": { "properties": { "trigger": { "required": ["event"] } } }
+    },
+    {
+      "if": { "properties": { "mode": { "const": "live_checkpoint" } }, "required": ["mode"] },
+      "then": { "properties": { "trigger": { "required": ["action"] } } }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": { "const": "live_checkpoint" },
+          "status": { "const": "ok" }
+        },
+        "required": ["mode", "status"]
+      },
+      "then": {
+        "properties": {
+          "trigger": {
+            "properties": {
+              "action": {
+                "required": ["event_seq_at_capture", "event_seq_after_capture"],
+                "properties": {
+                  "event_seq_at_capture": { "type": "integer", "minimum": 0 },
+                  "event_seq_after_capture": { "type": "integer", "minimum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ok" } }, "required": ["status"] },
+      "then": {
+        "required": ["state", "evidence"],
+        "properties": {
+          "state": {
+            "required": ["events_through_seq", "revision", "model", "model_hash", "ui_state"]
+          },
+          "evidence": {
+            "required": ["stability", "captures", "dom", "accessibility", "console", "iframes"],
+            "properties": {
+              "stability": {
+                "required": ["renderer_seq", "fonts_ready", "pending_requests", "animation_frames_waited", "iframes_expected", "iframes_ready"]
+              },
+              "captures": {
+                "minItems": 2,
+                "allOf": [
+                  { "contains": { "properties": { "surface": { "const": "app" } }, "required": ["surface"] } },
+                  { "contains": { "properties": { "surface": { "const": "canvas" } }, "required": ["surface"] } }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "else": { "required": ["error"] }
+    }
+  ]
+}

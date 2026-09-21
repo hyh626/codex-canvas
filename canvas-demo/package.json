@@ -9,6 +9,9 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
+    "eval:generate": "node eval/generate-cases.mjs",
+    "eval:run": "node eval/run.mjs",
+    "eval:validate": "node eval/validate-run.mjs",
     "desktop": "electron electron/main.cjs",
     "test:desktop": "node test/e2e/html-cuj.mjs"
   },
@@ -17,6 +20,8 @@
   },
   "devDependencies": {
     "@playwright/test": "1.58.2",
+    "@sparticuz/chromium": "^143.0.4",
+    "ajv": "^8.17.1",
     "electron": "40.0.0"
   }
 }
