@@ -11,6 +11,8 @@ const errors = [];
 const launch = async () => {
   app = await electron.launch({args:[...(process.env.CANVAS_E2E_NO_SANDBOX ? ['--no-sandbox'] : []),path.join(root,'electron/main.cjs')],env:{...process.env,CANVAS_USER_DATA:userData},timeout:20000});
   const page = await app.firstWindow();
+  await app.evaluate(({BrowserWindow}) => BrowserWindow.getAllWindows()[0]?.setSize(1280,900));
+  await page.waitForFunction(() => window.innerWidth > 1100);
   page.on('pageerror', e => errors.push(e.message));
   await expect(page.locator('#connection')).toHaveText('● Connected');
   return page;
