@@ -11,7 +11,11 @@ test("G9 runner executes, captures and validates a real headless Chromium case",
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "canvas-g9-test-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const result = await runEval({ caseIds: ["human-edit/nominal"], runsRoot: root, id: "test-run" });
-  assert.equal(result.results[0].summary.status, "pass");
+  assert.equal(
+    result.results[0].summary.status,
+    "pass",
+    JSON.stringify(result.results[0].summary.failures, null, 2),
+  );
   assert.deepEqual(validateRun(result.output), []);
   const caseRoot = path.join(result.output, "cases", "human-edit", "nominal");
   assert.ok(fs.readFileSync(path.join(caseRoot, "trajectory", "events.jsonl"), "utf8").includes("workspace.edit_committed"));
