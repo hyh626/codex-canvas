@@ -5,6 +5,9 @@ name: postmerge-ci
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'canvas-demo/**'
+      - '.github/workflows/canvas-html-cuj.yml'
 
 jobs:
   # Keep reusable workflow calls alphabetized. Each child retains its own
