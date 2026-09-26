@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "body": "One canvas. Human and agent, working on the same model.",
+      "color": "#6366f1",
+      "id": "welcome",
+      "title": "Build something together."
+    }
+  ]
+}

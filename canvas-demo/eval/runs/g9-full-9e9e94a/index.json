@@ -1,0 +1,96 @@
+{
+  "format": "canvas-render-eval-index-v1",
+  "run_id": "g9-full-9e9e94a",
+  "cases": [
+    {
+      "case_id": "human-edit/nominal",
+      "status": "pass",
+      "summary": "cases/human-edit/nominal/results/summary.json"
+    },
+    {
+      "case_id": "human-edit/unicode-escape",
+      "status": "pass",
+      "summary": "cases/human-edit/unicode-escape/results/summary.json"
+    },
+    {
+      "case_id": "human-edit/stale-conflict",
+      "status": "pass",
+      "summary": "cases/human-edit/stale-conflict/results/summary.json"
+    },
+    {
+      "case_id": "comment-agent/nominal",
+      "status": "pass",
+      "summary": "cases/comment-agent/nominal/results/summary.json"
+    },
+    {
+      "case_id": "comment-agent/body-anchor",
+      "status": "pass",
+      "summary": "cases/comment-agent/body-anchor/results/summary.json"
+    },
+    {
+      "case_id": "comment-agent/invalid-proposal",
+      "status": "pass",
+      "summary": "cases/comment-agent/invalid-proposal/results/summary.json"
+    },
+    {
+      "case_id": "shared-undo/nominal",
+      "status": "pass",
+      "summary": "cases/shared-undo/nominal/results/summary.json"
+    },
+    {
+      "case_id": "shared-undo/branch-invalidation",
+      "status": "pass",
+      "summary": "cases/shared-undo/branch-invalidation/results/summary.json"
+    },
+    {
+      "case_id": "shared-undo/restart",
+      "status": "pass",
+      "summary": "cases/shared-undo/restart/results/summary.json"
+    },
+    {
+      "case_id": "component-lifecycle/nominal",
+      "status": "pass",
+      "summary": "cases/component-lifecycle/nominal/results/summary.json"
+    },
+    {
+      "case_id": "component-lifecycle/capacity",
+      "status": "pass",
+      "summary": "cases/component-lifecycle/capacity/results/summary.json"
+    },
+    {
+      "case_id": "component-lifecycle/idempotent-retry",
+      "status": "pass",
+      "summary": "cases/component-lifecycle/idempotent-retry/results/summary.json"
+    },
+    {
+      "case_id": "html-component/nominal",
+      "status": "pass",
+      "summary": "cases/html-component/nominal/results/summary.json"
+    },
+    {
+      "case_id": "html-component/nested-unicode",
+      "status": "pass",
+      "summary": "cases/html-component/nested-unicode/results/summary.json"
+    },
+    {
+      "case_id": "html-component/security-error",
+      "status": "pass",
+      "summary": "cases/html-component/security-error/results/summary.json"
+    },
+    {
+      "case_id": "audited-request/capture-off",
+      "status": "pass",
+      "summary": "cases/audited-request/capture-off/results/summary.json"
+    },
+    {
+      "case_id": "audited-request/capture-on",
+      "status": "pass",
+      "summary": "cases/audited-request/capture-on/results/summary.json"
+    },
+    {
+      "case_id": "audited-request/corrupt-reconstruction",
+      "status": "pass",
+      "summary": "cases/audited-request/corrupt-reconstruction/results/summary.json"
+    }
+  ]
+}

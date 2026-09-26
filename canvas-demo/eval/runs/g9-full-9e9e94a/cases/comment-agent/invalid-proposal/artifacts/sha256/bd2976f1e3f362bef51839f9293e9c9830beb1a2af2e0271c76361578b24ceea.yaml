@@ -1,0 +1,127 @@
+- banner:
+  - link "◈ Canvas LAB / 001":
+    - /url: /
+    - text: ◈
+    - strong: Canvas
+    - text: LAB / 001
+  - text: ● Connected r1
+  - button "↶ Undo"
+  - button "↷ Redo" [disabled]
+  - link "Export trajectory ↗":
+    - /url: /api/export
+- main:
+  - complementary:
+    - text: WORKSPACE
+    - heading "A shared place to think." [level=1]
+    - paragraph: Edit a card. Ask the agent. Every change meets in one model.
+    - text: COMPONENTS 01
+    - navigation:
+      - button "◇ welcome"
+    - text: Try the loop
+    - list:
+      - listitem: Double-click a card title to edit.
+      - listitem: Duplicate, reorder, or delete a card.
+      - listitem: Ask the mock agent to change its color.
+      - listitem: Undo, then inspect the event.
+      - listitem: "Reload: the model stays."
+    - paragraph: Local demo · single writer Cards and editable static HTML components.
+  - region "Comment → agent proposal":
+    - text: CUJ PLAYGROUND
+    - heading "Comment → agent proposal" [level=2]
+    - text: CUJ scenario
+    - combobox "CUJ scenario":
+      - option "Human edits the model"
+      - option "Comment → agent proposal" [selected]
+      - option "Human + agent share Undo"
+      - option "Component lifecycle"
+      - option "HTML node + layout edit"
+      - option "Audited model request"
+    - button "Load / restart"
+    - paragraph: Anchor feedback to a node, then let an engine act on that context.
+    - list:
+      - listitem: "○ Comment on title: “标题：Build together”."
+      - listitem: ○ Use the comment as the instruction and run the mock agent.
+    - text: "In progress · 0/2 Expected: The comment remains anchored and the agent changes only the title."
+  - text: LIVE CANVAS
+  - heading "Your model, made visible." [level=2]
+  - button "＋ HTML component"
+  - button "＋ New card"
+  - button "Duplicate"
+  - button "← Move earlier" [disabled]
+  - button "Move later →" [disabled]
+  - button "Delete" [disabled]
+  - text: Double-click a title or body to edit it.
+  - article "welcome":
+    - heading "A rough direction" [level=3]
+    - paragraph: Comments are durable model context, not prompt-only UI state.
+    - text: WELCOME / SHARED COMPONENT
+    - button "Edit text"
+  - text: Agent
+  - combobox "Agent":
+    - option "Deterministic mock" [selected]
+    - option "DeepSeek Harness (experimental)" [disabled]
+    - option "Codex · requires provider setup" [disabled]
+  - text: assert = true · mock request Agent instruction
+  - textbox "Agent instruction":
+    - /placeholder: "Try: 标题：一起把想法变成作品"
+    - text: invalid proposal
+  - button "Horizontal layout"
+  - button "Change color"
+  - button "Add card"
+  - checkbox "Capture full request"
+  - text: Capture full request
+  - button "Run agent ↗"
+  - paragraph: Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call.
+  - status: Canvas needs 1–8 components
+  - text: TRAJECTORY APPEND ONLY
+  - button "008 agent.failed runtime":
+    - text: 008 agent.failed
+    - emphasis: runtime
+  - button "007 model.response_received runtime":
+    - text: 007 model.response_received
+    - emphasis: runtime
+  - button "006 model.request_prepared runtime":
+    - text: 006 model.request_prepared
+    - emphasis: runtime
+  - button "005 user.message human":
+    - text: 005 user.message
+    - emphasis: human
+  - button "004 comment.created human":
+    - text: 004 comment.created
+    - emphasis: human
+  - button "003 workspace.edit_committed human":
+    - text: 003 workspace.edit_committed
+    - emphasis: human
+  - button "002 scenario.started human":
+    - text: 002 scenario.started
+    - emphasis: human
+  - button "001 session.started runtime":
+    - text: 001 session.started
+    - emphasis: runtime
+  - complementary:
+    - text: INSPECTOR
+    - heading "welcome" [level=2]
+    - text: Title
+    - textbox "Title": A rough direction
+    - text: Body
+    - textbox "Body": Comments are durable model context, not prompt-only UI state.
+    - text: Accent
+    - textbox "Accent": "#6366f1"
+    - button "Commit edit"
+    - paragraph: Edits become one undoable transaction. Typing stays local until committed.
+    - button "Reload latest component"
+    - separator
+    - text: Comment on this component
+    - combobox:
+      - option "title" [selected]
+      - option "body"
+    - textbox "Comment on this component":
+      - /placeholder: Give feedback for the next agent turn
+    - button "Add comment"
+    - article:
+      - text: title · anchored at r1
+      - paragraph: 标题：Invalid
+      - button "Locate node"
+      - button "Use as agent instruction"
+    - group: "Data model { \"revision\": 1, \"components\": [ { \"body\": \"Comments are durable model context, not prompt-only UI state.\", \"color\": \"#6366f1\", \"id\": \"welcome\", \"title\": \"A rough direction\" } ] }"
+    - group: Selected event

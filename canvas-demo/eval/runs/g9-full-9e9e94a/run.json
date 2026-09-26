@@ -1,0 +1,49 @@
+{
+  "format": "canvas-render-eval-run-v1",
+  "run_id": "g9-full-9e9e94a",
+  "created_at": "2026-09-21T08:32:46.766Z",
+  "source": {
+    "repository": "https://github.com/hyh626/codex-canvas",
+    "commit": "9e9e94a4a6d444deef9446f71bf49e4ca63ddc99",
+    "dirty": false,
+    "model_schema": "urn:canvas-demo:model:v1",
+    "event_schema_version": 1
+  },
+  "runtime": {
+    "runner": "canvas-render-eval/0.1.0",
+    "node": "24.19.0",
+    "browser": {
+      "name": "chromium",
+      "version": "143.0.7499.0",
+      "headless": true
+    },
+    "os_image": "linux-6.18.44",
+    "locale": "en-US",
+    "timezone": "UTC",
+    "color_scheme": "light",
+    "reduced_motion": "reduce",
+    "fonts": [
+      "system-ui"
+    ]
+  },
+  "defaults": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "device_scale_factor": 1
+    },
+    "surfaces": [
+      "app",
+      "canvas"
+    ],
+    "capture_modes": [
+      "event_replay",
+      "live_checkpoint"
+    ],
+    "event_capture_phase": "after_event",
+    "comparison": {
+      "raw_trajectory": "byte-exact-within-run",
+      "cross_run": "semantic-fingerprint-plus-render-artifacts"
+    }
+  }
+}

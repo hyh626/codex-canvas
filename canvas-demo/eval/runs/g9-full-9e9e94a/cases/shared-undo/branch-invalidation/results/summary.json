@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "shared-undo/branch-invalidation",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 6,
+      "captured": 6,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 5,
+    "captures_ok": 11,
+    "captures_failed": 0,
+    "assertions": 21,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 6,
+    "revision": 4,
+    "model_hash": "f602832ea78d4492961c83731b42be1d3d1da962e3154dec215ce3f354f8b2a0"
+  },
+  "timing_ms": {
+    "execute": 7022.013320999977,
+    "replay_render": 4890.755963000003,
+    "oracles": 0.08243000000948086
+  },
+  "failures": []
+}

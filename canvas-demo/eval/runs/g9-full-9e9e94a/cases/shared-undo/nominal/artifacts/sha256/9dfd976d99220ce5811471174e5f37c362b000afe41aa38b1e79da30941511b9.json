@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "selected_component_id": "welcome",
+  "selected_scenario_id": "shared-undo",
+  "open_panel": "model",
+  "focus": null,
+  "scroll": {
+    "app_x": 0,
+    "app_y": 31,
+    "canvas_x": 0,
+    "canvas_y": 0
+  },
+  "dirty": false,
+  "running": false,
+  "connection": "connected",
+  "dialogs": [
+    {
+      "id": "inlineEdit",
+      "open": false
+    }
+  ],
+  "editor": {
+    "mode": "none",
+    "draft": null,
+    "error": null,
+    "rebase_available": false
+  },
+  "status": {
+    "text": "Agent proposal validated and committed. Try Undo.",
+    "tone": "success"
+  },
+  "controls": {
+    "undo_enabled": true,
+    "redo_enabled": true,
+    "run_enabled": true
+  }
+}

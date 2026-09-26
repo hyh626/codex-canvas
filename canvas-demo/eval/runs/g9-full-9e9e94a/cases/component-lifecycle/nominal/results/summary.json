@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "component-lifecycle/nominal",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 7,
+      "captured": 7,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 5,
+    "captures_ok": 12,
+    "captures_failed": 0,
+    "assertions": 21,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 7,
+    "revision": 5,
+    "model_hash": "07f647fa337fbb9df74dc7c403478ccb16355044116561dc3e69ad22e6f6ae71"
+  },
+  "timing_ms": {
+    "execute": 7311.639639999994,
+    "replay_render": 5730.079457,
+    "oracles": 0.11508700001286343
+  },
+  "failures": []
+}

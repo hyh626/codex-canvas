@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "audited-request/corrupt-reconstruction",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 2,
+      "captured": 2,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 7,
+    "captures_failed": 0,
+    "assertions": 9,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 5,
+    "revision": 1,
+    "model_hash": "2adaf10ef09a2785a54b166baa6824eda0e52f86dc0921ce9a47a2b44e5837b8"
+  },
+  "timing_ms": {
+    "execute": 4828.392737999995,
+    "replay_render": 4277.969132999977,
+    "oracles": 0.9740670000028331
+  },
+  "failures": []
+}

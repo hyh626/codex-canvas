@@ -1,18 +1,14 @@
 # G9 Canvas Render Eval
 
-This repository contains the deterministic G9 runner, the 18-case input corpus, and a portable HTML report. The raw Chromium screenshots and DOM artifacts are intentionally kept out of the Git tree; CI can archive them as run artifacts when needed.
+This repository contains the deterministic G9 runner, the 18-case input corpus, a portable summary report, and the complete recorded run with trajectories and render artifacts.
 
 - Cases: 18/18 passed
 - Trajectory events: 113
 - Live and replay captures: 187
-- Screenshot surfaces captured locally: 561
-- Source revision: `9e9e94a`
+- Screenshot surfaces captured: 561
+- Run: [`g9-full-9e9e94a`](runs/g9-full-9e9e94a/)
+- Source revision: `9e9e94a4a6d444deef9446f71bf49e4ca63ddc99`
 
-Run the eval locally with:
+The run directory contains its manifest, detailed HTML report, per-case inputs and results, trajectory event streams, and content-addressed screenshot, DOM, and other capture artifacts. The source revision and runtime environment are recorded in `run.json`.
 
-```bash
-npm run eval:run -- --run-id local-g9
-npm run eval:validate -- eval/runs/local-g9
-```
-
-Open `eval/G9-REPORT.html` for the portable report. It embeds one representative canvas screenshot per case, so it remains viewable after cloning without the raw artifact directory.
+Open [`G9-REPORT.html`](G9-REPORT.html) for the compact portable report, or [`runs/g9-full-9e9e94a/report.html`](runs/g9-full-9e9e94a/report.html) for the full run report.

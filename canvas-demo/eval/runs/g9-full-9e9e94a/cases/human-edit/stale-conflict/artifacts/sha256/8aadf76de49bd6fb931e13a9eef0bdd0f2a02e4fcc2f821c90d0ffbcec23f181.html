@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Canvas / shared model</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">◈ <strong>Canvas</strong><span>LAB / 001</span></a>
+      <div class="header-right">
+        <span id="connection">● Connected</span><span id="revision">r1</span><button id="undo" title="Ctrl/Cmd-Z">↶ Undo</button><button id="redo" title="Ctrl/Cmd-Shift-Z" disabled="">↷ Redo</button><a class="button" href="/api/export">Export trajectory ↗</a>
+      </div>
+    </header>
+    <main>
+      <aside>
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>A shared<br>place to think.</h1>
+        <p class="muted">
+          Edit a card. Ask the agent.<br>Every change meets in one model.
+        </p>
+        <div class="section-label">COMPONENTS <span id="count">01</span></div>
+        <nav id="components"><button class="active">◇  welcome</button></nav>
+        <div class="guide">
+          <b>Try the loop</b>
+          <ol>
+            <li>Double-click a card title to edit.</li>
+            <li>Duplicate, reorder, or delete a card.</li>
+            <li>Ask the mock agent to change its color.</li>
+            <li>Undo, then inspect the event.</li>
+            <li>Reload: the model stays.</li>
+          </ol>
+        </div>
+        <p class="footnote">
+          Local demo · single writer<br>Cards and editable static HTML components.
+        </p>
+      </aside>
+      <section class="workspace">
+        <section class="cuj-playground" aria-labelledby="cujTitle">
+          <div class="cuj-top">
+            <div>
+              <div class="eyebrow">CUJ PLAYGROUND</div>
+              <h2 id="cujTitle">Human edits the model</h2>
+            </div>
+            <div class="cuj-controls">
+              <label class="sr-only" for="scenario">CUJ scenario</label>
+              <select id="scenario"><option value="human-edit">Human edits the model</option><option value="comment-agent">Comment → agent proposal</option><option value="shared-undo">Human + agent share Undo</option><option value="component-lifecycle">Component lifecycle</option><option value="html-component">HTML node + layout edit</option><option value="audited-request">Audited model request</option></select>
+              <button id="loadScenario" class="primary">Load / restart</button>
+            </div>
+          </div>
+          <p id="cujSummary" class="cuj-summary">Edit one node and verify that the canvas, model and diff converge.</p>
+          <ol id="cujSteps" class="cuj-steps"><li class=""><span>○</span><span>Double-click the title and commit “Start your project”.</span></li><li class="manual"><span>◎</span><span>Open the latest commit in Trajectory and inspect its node-level diff.</span></li></ol>
+          <div class="cuj-result">
+            <span id="cujProgress" class="pill ">In progress · 0/1</span>
+            <span><b>Expected:</b> <span id="cujExpected">Only welcome.title changes; the component ID and other fields stay stable.</span></span>
+          </div>
+        </section>
+        <div class="canvas-heading">
+          <div>
+            <div class="eyebrow">LIVE CANVAS</div>
+            <h2>Your model, made visible.</h2>
+          </div>
+          <button id="newHTML">＋ HTML component</button><button id="newCard" class="primary">＋ New card</button>
+        </div>
+        <div class="card-toolbar" aria-label="Component actions">
+          <button id="duplicate">Duplicate</button><button id="moveEarlier" disabled="">← Move earlier</button><button id="moveLater" disabled="">Move later →</button><button id="deleteCard" disabled="">Delete</button>
+          <span class="small">Double-click a title or body to edit it.</span>
+        </div>
+        <div id="canvas" aria-label="Canvas components"><article class="card selected" tabindex="0" aria-label="welcome" data-component-id="welcome" style="--accent: #6366f1;"><div class="marker"></div><h3 data-node-id="title" title="Double-click to edit">Build something together.</h3><p data-node-id="body" title="Double-click to edit">Double-click this title to begin.</p><small>WELCOME / SHARED COMPONENT</small><button>Edit text</button></article></div>
+        <section class="composer">
+          <div class="composer-top">
+            <label for="engine">Agent</label><select id="engine">
+              <option value="mock">Deterministic mock</option>
+              <option value="dsh" disabled="">
+                DeepSeek Harness (experimental)
+              </option>
+              <option value="codex" disabled="">
+                Codex · requires provider setup
+              </option></select><span id="audit" class="pill">assert = true · mock request</span>
+          </div>
+          <label class="sr-only" for="prompt">Agent instruction</label><textarea id="prompt" placeholder="Try: 标题：一起把想法变成作品" rows="2" style=""></textarea>
+          <div class="composer-bottom">
+            <div class="presets">
+              <button data-prompt="layout: horizontal">Horizontal layout</button><button data-prompt="change color">Change color</button><button data-prompt="add card">Add card</button>
+            </div>
+            <label class="capture"><input type="checkbox" id="capture" style=""> Capture full
+              request</label><button id="run" class="primary">Run agent ↗</button>
+          </div>
+          <p id="agentNote" class="small">
+            Mock recognizes title text, “change color”, and “add card”. No model
+            API call.
+          </p>
+        </section>
+        <p id="status" role="status" class="">Ready. Edit the selected component or try an agent instruction.</p>
+        <section class="timeline">
+          <div class="section-label">TRAJECTORY <span>APPEND ONLY</span></div>
+          <div id="events"><button class="event-row"><span>003</span><b>workspace.edit_committed</b><em>human</em></button><button class="event-row"><span>002</span><b>scenario.started</b><em>human</em></button><button class="event-row"><span>001</span><b>session.started</b><em>runtime</em></button></div>
+        </section>
+      </section>
+      <aside class="inspector">
+        <div class="eyebrow">INSPECTOR</div>
+        <h2 id="selected">welcome</h2>
+        <form id="editor">
+          <div id="htmlFields" hidden=""><label for="htmlSource">HTML source</label><textarea id="htmlSource" rows="14" maxlength="12000" style=""></textarea></div>
+          <div id="cardFields">
+          <label for="title">Title</label><input id="title" maxlength="120" required="" style=""><label for="body">Body</label><textarea id="body" rows="4" maxlength="2000" style=""></textarea><label for="color">Accent</label><input type="color" id="color" style=""></div><button class="primary" type="submit">
+            Commit edit
+          </button>
+          <p class="small">
+            Edits become one undoable transaction.<br>Typing stays local until
+            committed.
+          </p>
+        </form><button id="reloadEditor">Reload latest component</button>
+        <hr>
+        <label for="comment">Comment on this component</label><select id="anchor"><option value="title">title</option><option value="body">body</option></select><textarea id="comment" rows="2" maxlength="2000" placeholder="Give feedback for the next agent turn" style=""></textarea><button id="addComment">Add comment</button>
+        <div id="comments" aria-label="Component comments">No comments on this component yet.</div>
+        <details open="">
+          <summary>Data model</summary>
+          <pre id="model">{
+  "revision": 1,
+  "components": [
+    {
+      "body": "Double-click this title to begin.",
+      "color": "#6366f1",
+      "id": "welcome",
+      "title": "Build something together."
+    }
+  ]
+}</pre>
+        </details>
+        <details>
+          <summary>Selected event</summary>
+          <pre id="event"></pre>
+        </details>
+      </aside>
+    </main>
+    <dialog id="inlineEdit" aria-labelledby="inlineLabel" open="">
+      <form id="inlineForm">
+        <h2 id="inlineLabel">Edit title</h2>
+        <p id="inlineContext" class="small">welcome · revision 1. Later changes will cause a conflict.</p>
+        <label for="inlineText">Text</label><textarea id="inlineText" rows="5" style="" maxlength="120"></textarea>
+        <p id="inlineError" role="alert">Revision conflict. Your draft is preserved; reload the latest component before retrying.</p>
+        <div class="dialog-actions">
+          <button id="rebaseInline" type="button">Compare latest / retain draft</button><button id="cancelInline" type="button">Cancel</button><button class="primary" type="submit">Commit edit</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="/app.js"></script>
+  
+
+</body></html>
