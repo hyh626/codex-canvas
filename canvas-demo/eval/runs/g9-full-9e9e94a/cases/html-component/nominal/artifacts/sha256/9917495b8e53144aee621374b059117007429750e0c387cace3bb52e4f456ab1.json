@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "selected_component_id": "hero",
+  "selected_scenario_id": "html-component",
+  "open_panel": "model",
+  "focus": "inlineText",
+  "scroll": {
+    "app_x": 0,
+    "app_y": 0,
+    "canvas_x": 0,
+    "canvas_y": 0
+  },
+  "dirty": false,
+  "running": false,
+  "connection": "connected",
+  "dialogs": [
+    {
+      "id": "inlineEdit",
+      "open": true
+    }
+  ],
+  "editor": {
+    "mode": "inline_text",
+    "draft": {
+      "component_id": "hero",
+      "node_id": "title",
+      "base_revision": 1,
+      "value": "A shared launch"
+    },
+    "error": null,
+    "rebase_available": false
+  },
+  "status": {
+    "text": "Ready. Edit the selected component or try an agent instruction.",
+    "tone": "neutral"
+  },
+  "controls": {
+    "undo_enabled": true,
+    "redo_enabled": false,
+    "run_enabled": true
+  }
+}

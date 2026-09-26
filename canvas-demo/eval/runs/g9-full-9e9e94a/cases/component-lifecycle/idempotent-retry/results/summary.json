@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "component-lifecycle/idempotent-retry",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 4,
+    "captures_ok": 8,
+    "captures_failed": 0,
+    "assertions": 17,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 4,
+    "revision": 2,
+    "model_hash": "62e4b6957159c3e9df215079f678c69aa598bdcc17c5e5a15ec24b126a2f3ec3"
+  },
+  "timing_ms": {
+    "execute": 5858.8395079999755,
+    "replay_render": 3076.373737999995,
+    "oracles": 0.07128400000510737
+  },
+  "failures": []
+}

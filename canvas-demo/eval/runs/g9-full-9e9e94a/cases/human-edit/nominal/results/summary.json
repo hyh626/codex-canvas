@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "human-edit/nominal",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 7,
+    "captures_failed": 0,
+    "assertions": 10,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 4,
+    "revision": 2,
+    "model_hash": "971e359e642fdf743e35e0b8480b92aa7048bc9534ae563467de76a16565d4f2"
+  },
+  "timing_ms": {
+    "execute": 5530.193839999998,
+    "replay_render": 3155.5629989999998,
+    "oracles": 1.5590740000006917
+  },
+  "failures": []
+}

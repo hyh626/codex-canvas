@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "shared-undo/restart",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 6,
+      "captured": 6,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 5,
+    "captures_ok": 11,
+    "captures_failed": 0,
+    "assertions": 21,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 6,
+    "revision": 4,
+    "model_hash": "92289ba3da6abeb2186fca442e351bfc8e6f25cf1d9b1a234a16849c5cba0037"
+  },
+  "timing_ms": {
+    "execute": 8001.338795999982,
+    "replay_render": 5601.761613999988,
+    "oracles": 0.1278759999986505
+  },
+  "failures": []
+}

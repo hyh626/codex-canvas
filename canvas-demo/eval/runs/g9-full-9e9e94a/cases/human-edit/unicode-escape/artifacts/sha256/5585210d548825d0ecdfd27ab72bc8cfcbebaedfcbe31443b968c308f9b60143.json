@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "body": "你好 👋 <b>literal</b> & goodbye",
+      "color": "#6366f1",
+      "id": "welcome",
+      "title": "Build something together."
+    }
+  ]
+}

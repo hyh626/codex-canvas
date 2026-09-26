@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "selected_component_id": "welcome",
+  "selected_scenario_id": "audited-request",
+  "open_panel": "model",
+  "focus": null,
+  "scroll": {
+    "app_x": 0,
+    "app_y": 0,
+    "canvas_x": 0,
+    "canvas_y": 0
+  },
+  "dirty": false,
+  "running": false,
+  "connection": "connected",
+  "dialogs": [
+    {
+      "id": "inlineEdit",
+      "open": false
+    }
+  ],
+  "editor": {
+    "mode": "none",
+    "draft": null,
+    "error": null,
+    "rebase_available": false
+  },
+  "status": {
+    "text": "Ready. Edit the selected component or try an agent instruction.",
+    "tone": "neutral"
+  },
+  "controls": {
+    "undo_enabled": true,
+    "redo_enabled": false,
+    "run_enabled": true
+  }
+}

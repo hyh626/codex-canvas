@@ -1,0 +1,68 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "component-lifecycle/idempotent-retry",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "81d56f7c-f837-4efa-b764-f9a031f31dc5",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "4a5198e9-964a-4333-83f8-f30a63119318",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "478f975e-5bb6-4211-96ea-839bfb92b838",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "20717296-62e6-4433-ae11-236d31fa78f7",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "a48ad2ea-ec81-4139-95ff-40a9ab33831f",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "cmd-retry-01",
+      "alias": "command-0002",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "component",
+      "actual_id": "card-190400f1",
+      "alias": "card-01",
+      "defined_at_seq": 1
+    }
+  ]
+}

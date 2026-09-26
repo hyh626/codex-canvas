@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "body": "Double-click this title to begin.",
+      "color": "#6366f1",
+      "id": "welcome",
+      "title": "Start your project"
+    }
+  ]
+}

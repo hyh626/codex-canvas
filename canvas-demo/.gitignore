@@ -2,4 +2,6 @@
 node_modules/
 *.log
 test-results/
-eval/runs/
+eval/runs/*
+!eval/runs/g9-full-9e9e94a/
+!eval/runs/g9-full-9e9e94a/**

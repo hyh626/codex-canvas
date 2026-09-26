@@ -1,0 +1,80 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "comment-agent/invalid-proposal",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "7bff90a9-7f67-469b-9ac2-a275d8be14eb",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "f00c4cc8-ae3f-47c3-b68a-bab02f1f7518",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "dc8237d9-7663-4602-bdfb-d2677946ab39",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "caf5dd07-c213-468f-abdc-c1ef0800d689",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "78c02723-8454-43e8-95ab-68ea92f5bd56",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "0f49e122-695f-4a17-94c3-9c5ec2ddf4db",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "event",
+      "actual_id": "855c8811-1da9-4878-9a1a-758078340579",
+      "alias": "event-000006",
+      "defined_at_seq": 6
+    },
+    {
+      "kind": "event",
+      "actual_id": "efafcd4b-bbb1-4013-a31d-1be1bbb060cd",
+      "alias": "event-000007",
+      "defined_at_seq": 7
+    },
+    {
+      "kind": "event",
+      "actual_id": "c86b28db-efdb-46ec-8ce2-58e214454196",
+      "alias": "event-000008",
+      "defined_at_seq": 8
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    }
+  ]
+}

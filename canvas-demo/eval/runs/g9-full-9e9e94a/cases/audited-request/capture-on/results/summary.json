@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "audited-request/capture-on",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 7,
+      "captured": 7,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 11,
+    "captures_failed": 0,
+    "assertions": 11,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 7,
+    "revision": 2,
+    "model_hash": "4f684a52445216e3ca2f8bfb4e73d9c256ecfdd84b71eda10606a5d0a8fe7388"
+  },
+  "timing_ms": {
+    "execute": 5768.6402649999945,
+    "replay_render": 5121.896609999996,
+    "oracles": 0.22778599997400306
+  },
+  "failures": []
+}

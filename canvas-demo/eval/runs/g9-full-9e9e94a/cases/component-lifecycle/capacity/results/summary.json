@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "component-lifecycle/capacity",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 9,
+      "captured": 9,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 8,
+      "captured": 8,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 8,
+    "captures_ok": 17,
+    "captures_failed": 0,
+    "assertions": 33,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 9,
+    "revision": 7,
+    "model_hash": "6de35e95cc604a7490d5df2aeed7947787f0bf09550f55e58ffacb9223927a8d"
+  },
+  "timing_ms": {
+    "execute": 9888.44591499999,
+    "replay_render": 7141.087482000003,
+    "oracles": 0.1288840000052005
+  },
+  "failures": []
+}

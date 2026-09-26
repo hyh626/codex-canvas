@@ -1,0 +1,114 @@
+- banner:
+  - link "◈ Canvas LAB / 001":
+    - /url: /
+    - text: ◈
+    - strong: Canvas
+    - text: LAB / 001
+  - text: ● Connected r1
+  - button "↶ Undo"
+  - button "↷ Redo" [disabled]
+  - link "Export trajectory ↗":
+    - /url: /api/export
+- main:
+  - complementary:
+    - text: WORKSPACE
+    - heading "A shared place to think." [level=1]
+    - paragraph: Edit a card. Ask the agent. Every change meets in one model.
+    - text: COMPONENTS 01
+    - navigation:
+      - button "◇ welcome"
+    - text: Try the loop
+    - list:
+      - listitem: Double-click a card title to edit.
+      - listitem: Duplicate, reorder, or delete a card.
+      - listitem: Ask the mock agent to change its color.
+      - listitem: Undo, then inspect the event.
+      - listitem: "Reload: the model stays."
+    - paragraph: Local demo · single writer Cards and editable static HTML components.
+  - region "Audited model request":
+    - text: CUJ PLAYGROUND
+    - heading "Audited model request" [level=2]
+    - text: CUJ scenario
+    - combobox "CUJ scenario":
+      - option "Human edits the model"
+      - option "Comment → agent proposal"
+      - option "Human + agent share Undo"
+      - option "Component lifecycle"
+      - option "HTML node + layout edit"
+      - option "Audited model request" [selected]
+    - button "Load / restart"
+    - paragraph: Inspect reconstruction, optional capture and the committed proposal.
+    - list:
+      - listitem: ○ Enable Capture full request and run “change color”.
+      - listitem: ◎ Open model.request_prepared in Trajectory and inspect the rebuilt request.
+    - text: "In progress · 0/1 Expected: The request has assert=true; capture adds a body blob without changing execution."
+  - text: LIVE CANVAS
+  - heading "Your model, made visible." [level=2]
+  - button "＋ HTML component"
+  - button "＋ New card"
+  - button "Duplicate"
+  - button "← Move earlier" [disabled]
+  - button "Move later →" [disabled]
+  - button "Delete" [disabled]
+  - text: Double-click a title or body to edit it.
+  - article "welcome":
+    - heading "Audit the request" [level=3]
+    - paragraph: Enable capture, then run a deterministic proposal.
+    - text: WELCOME / SHARED COMPONENT
+    - button "Edit text"
+  - text: Agent
+  - combobox "Agent":
+    - option "Deterministic mock" [selected]
+    - option "DeepSeek Harness (experimental)" [disabled]
+    - option "Codex · requires provider setup" [disabled]
+  - text: assert = true · mock request Agent instruction
+  - textbox "Agent instruction":
+    - /placeholder: "Try: 标题：一起把想法变成作品"
+    - text: change color
+  - button "Horizontal layout"
+  - button "Change color"
+  - button "Add card"
+  - checkbox "Capture full request"
+  - text: Capture full request
+  - button "Run agent ↗"
+  - paragraph: Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call.
+  - status: Agent proposal validated and committed. Try Undo.
+  - text: TRAJECTORY APPEND ONLY
+  - button "005 model.request_prepared runtime":
+    - text: 005 model.request_prepared
+    - emphasis: runtime
+  - button "004 user.message human":
+    - text: 004 user.message
+    - emphasis: human
+  - button "003 workspace.edit_committed human":
+    - text: 003 workspace.edit_committed
+    - emphasis: human
+  - button "002 scenario.started human":
+    - text: 002 scenario.started
+    - emphasis: human
+  - button "001 session.started runtime":
+    - text: 001 session.started
+    - emphasis: runtime
+  - complementary:
+    - text: INSPECTOR
+    - heading "welcome" [level=2]
+    - text: Title
+    - textbox "Title": Audit the request
+    - text: Body
+    - textbox "Body": Enable capture, then run a deterministic proposal.
+    - text: Accent
+    - textbox "Accent": "#6366f1"
+    - button "Commit edit"
+    - paragraph: Edits become one undoable transaction. Typing stays local until committed.
+    - button "Reload latest component"
+    - separator
+    - text: Comment on this component
+    - combobox:
+      - option "title" [selected]
+      - option "body"
+    - textbox "Comment on this component":
+      - /placeholder: Give feedback for the next agent turn
+    - button "Add comment"
+    - text: No comments on this component yet.
+    - group: "Data model { \"revision\": 1, \"components\": [ { \"body\": \"Enable capture, then run a deterministic proposal.\", \"color\": \"#6366f1\", \"id\": \"welcome\", \"title\": \"Audit the request\" } ] }"
+    - group: Selected event

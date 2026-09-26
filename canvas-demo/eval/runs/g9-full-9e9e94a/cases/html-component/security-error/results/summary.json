@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "html-component/security-error",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 2,
+      "captured": 2,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 5,
+    "captures_failed": 0,
+    "assertions": 9,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 3,
+    "revision": 1,
+    "model_hash": "94f542d15413fe4e274e3533aa8020e40e7040f265414f7f5e2d2070bed26f44"
+  },
+  "timing_ms": {
+    "execute": 4308.268775000004,
+    "replay_render": 2248.4716230000195,
+    "oracles": 0.23543400000198744
+  },
+  "failures": []
+}

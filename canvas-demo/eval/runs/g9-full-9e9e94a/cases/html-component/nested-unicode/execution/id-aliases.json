@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "html-component/nested-unicode",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "7750b3ea-ad43-4f2d-9013-9727943abb94",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "72cf4881-5334-4200-8680-3448aa2d61d9",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "7b1f918a-e05e-47e3-b00f-7ebd03facdaf",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "ed0f5ea7-de68-47e0-bf30-5c4afee04540",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "ebf54875-6422-4b94-9f4c-46562f61f46f",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "b59cc8a9-d3ce-4e00-a6b4-fa170317c582",
+      "alias": "command-0002",
+      "defined_at_seq": 4
+    }
+  ]
+}

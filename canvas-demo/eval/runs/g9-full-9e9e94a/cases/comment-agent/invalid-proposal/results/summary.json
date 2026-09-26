@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "comment-agent/invalid-proposal",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 8,
+      "captured": 8,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 3,
+    "captures_ok": 11,
+    "captures_failed": 0,
+    "assertions": 13,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 8,
+    "revision": 1,
+    "model_hash": "e9fede56f057cabdededef978fad76682b3437c7c77f62b9161028f610520615"
+  },
+  "timing_ms": {
+    "execute": 5504.064562,
+    "replay_render": 6038.4363370000065,
+    "oracles": 0.4135930000047665
+  },
+  "failures": []
+}

@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "html-component/nested-unicode",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 7,
+    "captures_failed": 0,
+    "assertions": 10,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 4,
+    "revision": 2,
+    "model_hash": "c3ed60d28623185a935030d6eae1199a3d55ec8eb1ad78443f4576982a02885d"
+  },
+  "timing_ms": {
+    "execute": 5756.932559999987,
+    "replay_render": 3125.703935000027,
+    "oracles": 0.07214400000520982
+  },
+  "failures": []
+}

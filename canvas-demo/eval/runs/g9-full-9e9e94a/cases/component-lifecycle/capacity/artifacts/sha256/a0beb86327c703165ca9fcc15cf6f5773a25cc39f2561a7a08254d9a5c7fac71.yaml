@@ -1,0 +1,168 @@
+- banner:
+  - link "◈ Canvas LAB / 001":
+    - /url: /
+    - text: ◈
+    - strong: Canvas
+    - text: LAB / 001
+  - text: ● Connected r7
+  - button "↶ Undo"
+  - button "↷ Redo" [disabled]
+  - link "Export trajectory ↗":
+    - /url: /api/export
+- main:
+  - complementary:
+    - text: WORKSPACE
+    - heading "A shared place to think." [level=1]
+    - paragraph: Edit a card. Ask the agent. Every change meets in one model.
+    - text: COMPONENTS 08
+    - navigation:
+      - button "◇ alpha"
+      - button "◇ omega"
+      - button "◇ card-ec5b5362"
+      - button "◇ card-fc585f9a"
+      - button "◇ card-a3975f91"
+      - button "◇ card-a07516dc"
+      - button "◇ card-44322d0c"
+      - button "◇ card-22a044df"
+    - text: Try the loop
+    - list:
+      - listitem: Double-click a card title to edit.
+      - listitem: Duplicate, reorder, or delete a card.
+      - listitem: Ask the mock agent to change its color.
+      - listitem: Undo, then inspect the event.
+      - listitem: "Reload: the model stays."
+    - paragraph: Local demo · single writer Cards and editable static HTML components.
+  - region "Component lifecycle":
+    - text: CUJ PLAYGROUND
+    - heading "Component lifecycle" [level=2]
+    - text: CUJ scenario
+    - combobox "CUJ scenario":
+      - option "Human edits the model"
+      - option "Comment → agent proposal"
+      - option "Human + agent share Undo"
+      - option "Component lifecycle" [selected]
+      - option "HTML node + layout edit"
+      - option "Audited model request"
+    - button "Load / restart"
+    - paragraph: Exercise identity, ordering and deletion as model operations.
+    - list:
+      - listitem: ○ Duplicate Alpha; the copy should be selected with a new ID.
+      - listitem: ○ Move the duplicate later in the document order.
+      - listitem: ○ Delete the duplicate; Alpha and Omega should remain.
+    - text: "In progress · 0/3 Expected: The duplicate gets a new ID; moves and deletion preserve the remaining data."
+  - text: LIVE CANVAS
+  - heading "Your model, made visible." [level=2]
+  - button "＋ HTML component" [disabled]
+  - button "＋ New card" [disabled]
+  - button "Duplicate" [disabled]
+  - button "← Move earlier"
+  - button "Move later →" [disabled]
+  - button "Delete"
+  - text: Double-click a title or body to edit it.
+  - article "alpha":
+    - heading "Alpha" [level=3]
+    - paragraph: Duplicate this card.
+    - text: ALPHA / SHARED COMPONENT
+    - button "Edit text"
+  - article "omega":
+    - heading "Omega" [level=3]
+    - paragraph: Keep this card unchanged.
+    - text: OMEGA / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-ec5b5362":
+    - heading "Card 1" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-EC5B5362 / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-fc585f9a":
+    - heading "Card 2" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-FC585F9A / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-a3975f91":
+    - heading "Card 3" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-A3975F91 / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-a07516dc":
+    - heading "Card 4" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-A07516DC / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-44322d0c":
+    - heading "Card 5" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-44322D0C / SHARED COMPONENT
+    - button "Edit text"
+  - article "card-22a044df":
+    - heading "Card 6" [level=3]
+    - paragraph: Capacity test
+    - text: CARD-22A044DF / SHARED COMPONENT
+    - button "Edit text"
+  - text: Agent
+  - combobox "Agent":
+    - option "Deterministic mock" [selected]
+    - option "DeepSeek Harness (experimental)" [disabled]
+    - option "Codex · requires provider setup" [disabled]
+  - text: assert = true · mock request Agent instruction
+  - textbox "Agent instruction":
+    - /placeholder: "Try: 标题：一起把想法变成作品"
+  - button "Horizontal layout"
+  - button "Change color"
+  - button "Add card"
+  - checkbox "Capture full request"
+  - text: Capture full request
+  - button "Run agent ↗"
+  - paragraph: Mock recognizes title text, “change color”, and “add card”. No model API call.
+  - status: Ready. Edit the selected component or try an agent instruction.
+  - text: TRAJECTORY APPEND ONLY
+  - button "009 workspace.edit_committed human":
+    - text: 009 workspace.edit_committed
+    - emphasis: human
+  - button "008 workspace.edit_committed human":
+    - text: 008 workspace.edit_committed
+    - emphasis: human
+  - button "007 workspace.edit_committed human":
+    - text: 007 workspace.edit_committed
+    - emphasis: human
+  - button "006 workspace.edit_committed human":
+    - text: 006 workspace.edit_committed
+    - emphasis: human
+  - button "005 workspace.edit_committed human":
+    - text: 005 workspace.edit_committed
+    - emphasis: human
+  - button "004 workspace.edit_committed human":
+    - text: 004 workspace.edit_committed
+    - emphasis: human
+  - button "003 workspace.edit_committed human":
+    - text: 003 workspace.edit_committed
+    - emphasis: human
+  - button "002 scenario.started human":
+    - text: 002 scenario.started
+    - emphasis: human
+  - button "001 session.started runtime":
+    - text: 001 session.started
+    - emphasis: runtime
+  - complementary:
+    - text: INSPECTOR
+    - heading "card-22a044df" [level=2]
+    - text: Title
+    - textbox "Title": Card 6
+    - text: Body
+    - textbox "Body": Capacity test
+    - text: Accent
+    - textbox "Accent": "#6366f1"
+    - button "Commit edit"
+    - paragraph: Edits become one undoable transaction. Typing stays local until committed.
+    - button "Reload latest component"
+    - separator
+    - text: Comment on this component
+    - combobox:
+      - option "title" [selected]
+      - option "body"
+    - textbox "Comment on this component":
+      - /placeholder: Give feedback for the next agent turn
+    - button "Add comment"
+    - text: No comments on this component yet.
+    - group: "Data model { \"revision\": 7, \"components\": [ { \"body\": \"Duplicate this card.\", \"color\": \"#6366f1\", \"id\": \"alpha\", \"title\": \"Alpha\" }, { \"body\": \"Keep this card unchanged.\", \"color\": \"#0d9488\", \"id\": \"omega\", \"title\": \"Omega\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-ec5b5362\", \"title\": \"Card 1\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-fc585f9a\", \"title\": \"Card 2\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-a3975f91\", \"title\": \"Card 3\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-a07516dc\", \"title\": \"Card 4\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-44322d0c\", \"title\": \"Card 5\" }, { \"body\": \"Capacity test\", \"color\": \"#6366f1\", \"id\": \"card-22a044df\", \"title\": \"Card 6\" } ] }"
+    - group: Selected event
