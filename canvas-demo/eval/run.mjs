@@ -73,6 +73,7 @@ function makeControl() {
   const hooks = {
     beforeAgentRequest() {
       if (control.fault === "request-fragment-corruption") throw Error("Request reconstruction failed: injected fragment corruption");
+      if (control.fault === "agent-fails-before-gate") throw Error("Injected agent failure before response gate");
     },
     transformProposal({ proposal }) {
       if (control.fault === "invalid-proposal") return { components: [] };
@@ -118,7 +119,7 @@ async function loadPage(context, url, consoleMessages) {
   return page;
 }
 
-async function runCase({ browser, caseId, runRoot }) {
+async function runCase({ browser, caseId, runRoot, faultOverrides = {} }) {
   const [scenarioId, exampleId] = caseId.split("/");
   const sourceDir = path.join(inputRoot, scenarioId, exampleId);
   const spec = readJson(path.join(sourceDir, "spec.json"));
@@ -190,7 +191,7 @@ async function runCase({ browser, caseId, runRoot }) {
       const captureIds = [];
       let outcome = { ok: true, status: 200, body: null };
       let gate = null;
-      control.fault = actionItem.input.fault_profile ?? null;
+      control.fault = faultOverrides[actionItem.action_id] ?? actionItem.input.fault_profile ?? null;
 
       const requestedAlias = actionItem.input.component_id ?? spec.view_policy.selected_component_id;
       const creatingNewAlias = actionItem.kind === "create" && !reverseAliases.has(requestedAlias);
@@ -215,21 +216,46 @@ async function runCase({ browser, caseId, runRoot }) {
           const armed = armGate();
           control.gate = armed;
           gate = { name: during.response_gate.name, pause_at: "before_model_commit", status: "released", release_reason: "captured", observations: [{ ordinal: 1, phase: "gate_armed" }] };
+          await page.evaluate(() => {
+            const button = document.getElementById("run");
+            button.dataset.evalWasDisabled = "false";
+            const observer = new MutationObserver(() => {
+              if (button.disabled) button.dataset.evalWasDisabled = "true";
+              else if (button.dataset.evalWasDisabled === "true") observer.disconnect();
+            });
+            observer.observe(button, { attributes: true, attributeFilter: ["disabled"] });
+          });
         }
+        const agentResponse = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/agent", { timeout: 15000 });
         await page.locator("#run").click();
         if (gate) {
-          await control.gate.paused;
-          gate.observations.push({ ordinal: 2, phase: "gate_paused" });
-          const captureId = `${caseId}@${actionItem.action_id}-during`;
-          gate.observations.push({ ordinal: 3, phase: "capture_started", capture_id: captureId });
-          captureIds.push((await liveCapture(actionItem, "during")).capture_id);
-          gate.observations.push({ ordinal: 4, phase: "capture_finished", capture_id: captureId });
-          control.gate.release();
-          gate.observations.push({ ordinal: 5, phase: "gate_released" });
+          const reached = await Promise.race([
+            control.gate.paused.then(() => true),
+            page.waitForFunction(() => {
+              const button = document.getElementById("run");
+              return button.dataset.evalWasDisabled === "true" && !button.disabled;
+            }, null, { timeout: 10000 }).then(() => false),
+          ]);
+          if (reached) {
+            gate.observations.push({ ordinal: 2, phase: "gate_paused" });
+            const captureId = `${caseId}@${actionItem.action_id}-during`;
+            gate.observations.push({ ordinal: 3, phase: "capture_started", capture_id: captureId });
+            try {
+              captureIds.push((await liveCapture(actionItem, "during")).capture_id);
+              gate.observations.push({ ordinal: 4, phase: "capture_finished", capture_id: captureId });
+            } finally {
+              control.gate.release();
+            }
+            gate.observations.push({ ordinal: 5, phase: "gate_released" });
+          } else {
+            gate.status = "not_reached";
+            delete gate.release_reason;
+          }
         }
         await page.waitForFunction(() => !document.getElementById("run").disabled, null, { timeout: 10000 });
+        const response = await agentResponse;
         const observed = await page.evaluate(() => globalThis.__canvasEval.observedUIState());
-        outcome = { ok: observed.status.tone !== "error", status: observed.status.tone === "error" ? 400 : 200, body: observed.status };
+        outcome = { ok: response.ok(), status: response.status(), body: observed.status };
       } else if (actionItem.kind === "load_scenario") {
         outcome = await post("scenario", { scenarioId: actionItem.input.scenario_id, baseRevision: app.store.revision, commandId: `eval-${actionItem.step}` });
         if (outcome.ok) await page.evaluate(({ body, scenarioId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId }), { body: outcome.body, scenarioId });
@@ -238,11 +264,13 @@ async function runCase({ browser, caseId, runRoot }) {
           outcome = await post("component", { operation: "set_text", componentId: selectedActual, nodeId: actionItem.input.node_id, text: actionItem.input.value, baseRevision: actionItem.input.base_revision, commandId: `eval-${actionItem.step}` });
           if (outcome.ok) await page.evaluate(({ body, scenarioId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId }), { body: outcome.body, scenarioId });
         } else {
+          const editResponse = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/component", { timeout: 15000 });
           await page.locator("#inlineForm button[type=submit]").click();
           if (checkpoint.expected_action_status === "succeeded") await page.waitForFunction(() => !document.getElementById("inlineEdit").open);
           else await page.waitForFunction(() => Boolean(document.getElementById("inlineError").textContent));
+          const response = await editResponse;
           const observed = await page.evaluate(() => globalThis.__canvasEval.observedUIState());
-          outcome = { ok: checkpoint.expected_action_status === "succeeded" && !observed.editor.error, status: observed.editor.error ? 409 : 200, body: observed.editor.error ? { error: observed.editor.error } : {} };
+          outcome = { ok: response.ok() && !observed.editor.error, status: response.status(), body: observed.editor.error ? { error: observed.editor.error } : {} };
         }
       } else if (actionItem.kind === "comment") {
         outcome = await post("comment", { componentId: selectedActual, nodeId: actionItem.input.node_id, text: actionItem.input.text, baseRevision: app.store.revision, commandId: `eval-${actionItem.step}` });
@@ -288,12 +316,13 @@ async function runCase({ browser, caseId, runRoot }) {
         next.components.find((component) => component.id === selectedActual).html = actionItem.input.html;
         outcome = await post("edit", { state: next, baseRevision: app.store.revision, commandId: `eval-${actionItem.step}` });
         if (!outcome.ok) await page.evaluate((message) => globalThis.__canvasEval.showError(message), outcome.body.error);
+        else await page.evaluate(({ body, scenarioId, selectedComponentId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId, selectedComponentId }), { body: outcome.body, scenarioId, selectedComponentId: selectedActual });
       } else throw Error(`Unsupported eval action kind: ${actionItem.kind}`);
 
       control.gate = null;
       control.fault = null;
       const expectedSuccess = checkpoint.expected_action_status === "succeeded";
-      const actualStatus = outcome.ok ? "succeeded" : checkpoint.expected_action_status;
+      const actualStatus = outcome.ok ? "succeeded" : outcome.status === 409 ? "rejected" : "failed";
       const afterEvents = app.store.events.slice(beforeEvents);
       reconcileComponentAliases(app.store.state, checkpoint.expected_model, aliases, reverseAliases);
 
@@ -316,7 +345,7 @@ async function runCase({ browser, caseId, runRoot }) {
       actionResults.push(actionResult);
 
       const normalized = normalizeModel(app.store.state, aliases);
-      addAssertion({ id: `${actionItem.action_id}-status`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "action status", pass: (outcome.ok === expectedSuccess), actual: outcome.ok ? "succeeded" : actualStatus, expected: checkpoint.expected_action_status, message: outcome.ok === expectedSuccess ? undefined : `HTTP ${outcome.status}: ${outcome.body?.error ?? "unexpected status"}` });
+      addAssertion({ id: `${actionItem.action_id}-status`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "action status", pass: actualStatus === checkpoint.expected_action_status, actual: actualStatus, expected: checkpoint.expected_action_status, message: actualStatus === checkpoint.expected_action_status ? undefined : `HTTP ${outcome.status}: ${outcome.body?.error ?? "unexpected status"}` });
       addAssertion({ id: `${actionItem.action_id}-model`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "expected model", pass: stable(normalized) === stable(checkpoint.expected_model), actual: normalized, expected: checkpoint.expected_model });
       const emittedTypes = afterEvents.map((event) => event.type);
       addAssertion({ id: `${actionItem.action_id}-events`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "expected event sequence", pass: orderedSubsequence(emittedTypes, checkpoint.expected_events.sequence), actual: emittedTypes, expected: checkpoint.expected_events.sequence });
@@ -415,14 +444,16 @@ export function rebuildReport(runDirectory) {
   fs.writeFileSync(path.join(runDirectory, "report.html"), reportHtml(run, results));
 }
 
-export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId() } = {}) {
+export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(), faultOverrides = {}, executablePath: executableOverride } = {}) {
   const manifest = readJson(path.join(inputRoot, "manifest.json"));
   const selected = caseIds?.length ? caseIds : manifest.cases;
   const output = path.join(runsRoot, id);
   fs.mkdirSync(output, { recursive: true });
   let executablePath;
   let chromiumArgs = [];
-  if (process.platform === "linux") {
+  if (executableOverride ?? process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+    executablePath = executableOverride ?? process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  } else if (process.platform === "linux") {
     const originalGetuid = process.getuid;
     try {
       if (originalGetuid) process.getuid = () => -1;
@@ -454,7 +485,7 @@ export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(
     const caseId = selected[index];
     if (index > 0) browser = await launchBrowser();
     try {
-      const result = await runCase({ browser, caseId, runRoot: output });
+      const result = await runCase({ browser, caseId, runRoot: output, faultOverrides });
       results.push(result);
       console.log(`${result.summary.status.toUpperCase()} ${caseId} (${result.captureCount} captures)`);
     } finally {
