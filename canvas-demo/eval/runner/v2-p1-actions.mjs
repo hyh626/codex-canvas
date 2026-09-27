@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { createApp } from "../../server.mjs";
 
 /**
@@ -152,8 +153,18 @@ async function exportRestore(action, context) {
   };
   if (action.input.fault === "missing_blob" && archive.blobs) {
     const firstBlob = Object.keys(archive.blobs)[0];
-    if (firstBlob) delete archive.blobs[firstBlob];
-    else archive.blobs["sha256:missing-eval-blob"] = "";
+    if (firstBlob) {
+      delete archive.blobs[firstBlob];
+    } else {
+      // Make the archive reference a syntactically valid SHA-256 asset, then
+      // omit it. This exercises the missing-reference check rather than
+      // succeeding/failing on an unrelated malformed blob key.
+      const missingBytes = Buffer.from(`missing-eval-blob-${action.step}`);
+      const missingHash = createHash("sha256").update(missingBytes).digest("hex");
+      const events = archive.events_jsonl.trimEnd().split("\n").map(JSON.parse);
+      events[0].eval_asset = { sha256: missingHash, size_bytes: missingBytes.length };
+      archive.events_jsonl = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
+    }
   }
 
   const destinationDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "canvas-eval-restore-"));
@@ -285,7 +296,8 @@ async function reconnect(action, context) {
     submit = await submitInline(page);
     if (!submit.alert && submit.responseStatus === 200) await renderCurrent();
     const ok = operation === "concurrent_edit"
-      ? disconnectedObserved && submit.responseStatus === 409 && Boolean(submit.alert)
+      ? disconnectedObserved && submit.responseStatus === 409 && Boolean(submit.alert) &&
+        submit.ui?.editor?.draft?.value === draft && app.store.state.components.find((item) => item.id === selectedComponentId)?.title === action.input.remote_title
       : Boolean(submit.ui?.editor?.draft) && Boolean(submit.alert);
     return result(ok, submit.responseStatus ?? (ok ? 200 : 503), { error: submit.alert || null }, {
       operation,
@@ -332,8 +344,16 @@ async function keyboardInteraction(action, context) {
     await page.keyboard.press("Control+z");
     await page.waitForFunction(() => document.getElementById("undo")?.disabled === true, null, { timeout: 5000 }).catch(() => {});
   }
+  let cardReachable = !steps.includes("open-card");
   if (steps.includes("open-card")) {
-    await page.keyboard.press("Tab");
+    await page.locator("body").focus();
+    for (let tab = 0; tab < 50 && !cardReachable; tab += 1) {
+      await page.keyboard.press("Tab");
+      cardReachable = await page.evaluate(
+        (componentId) => document.activeElement?.closest?.("[data-component-id]")?.dataset.componentId === componentId,
+        selectedComponentId,
+      );
+    }
   }
   if (steps.includes("read-body")) {
     const body = page.locator(`[data-component-id="${selectedComponentId}"] p`).first();
@@ -354,10 +374,12 @@ async function keyboardInteraction(action, context) {
   }
 
   if (steps.includes("read-live-region")) {
-    const alert = await page.locator("#inlineError[role=alert]").textContent();
+    const alert = await page.locator("#inlineError").textContent();
+    const role = await page.locator("#inlineError").getAttribute("role");
     const state = await readUiState(page);
-    return result(Boolean(alert?.trim()), alert?.trim() ? 200 : 422, { alert }, {
-      alert_role: await page.locator("#inlineError").getAttribute("role"),
+    const announced = role === "alert" && Boolean(alert?.trim());
+    return result(announced, announced ? 200 : 422, { alert }, {
+      alert_role: role,
       alert_text: alert,
       active_element: await page.evaluate(() => document.activeElement?.id ?? null),
       ui_state: state,
@@ -375,10 +397,14 @@ async function keyboardInteraction(action, context) {
       .slice(0, 12)
       .map((element) => ({ tag: element.tagName.toLowerCase(), id: element.id, class_name: element.className, right: Math.round(element.getBoundingClientRect().right) })),
   }));
-  const reachable = !steps.includes("open-card") || layout.focused_component_id === selectedComponentId;
+  const reachable = cardReachable;
+  const bodyReachable = !steps.includes("read-body") || await page.evaluate(
+    (componentId) => document.activeElement === document.querySelector(`[data-component-id="${componentId}"] p`),
+    selectedComponentId,
+  );
   const noOverflow = layout.scroll_width <= layout.viewport_width;
-  const ok = reachable && noOverflow;
-  return result(ok, ok ? 200 : 422, { ui, layout }, { steps, ui, viewport: page.viewportSize(), layout });
+  const ok = reachable && bodyReachable && noOverflow;
+  return result(ok, ok ? 200 : 422, { ui, layout }, { steps, ui, viewport: page.viewportSize(), layout, card_reachable: cardReachable, body_reachable: bodyReachable });
 }
 
 export async function executeV2P1Action({ action, context }) {

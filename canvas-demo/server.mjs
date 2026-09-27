@@ -4,14 +4,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID, timingSafeEqual } from "node:crypto";
-import { Store, validate } from "./store.mjs";
+import { Store, hash, stable, validate } from "./store.mjs";
 import { runEngine, engineCapabilities } from "./engine.mjs";
 import { componentCommand } from "./commands.mjs";
 import { createGateway } from "./gateway.mjs";
 import { scenarioById } from "./scenarios.mjs";
-import { decideProposal, latestProposal, stageProposal } from "./proposal-review.mjs";
+import { decideProposal, latestProposal, proposalRecord, stageProposal } from "./proposal-review.mjs";
 import { changeComment, currentComments } from "./comment-lifecycle.mjs";
-import { restoreArchive } from "./archive-import.mjs";
+import { recoverInterruptedImport, restoreArchive } from "./archive-import.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
@@ -29,6 +29,7 @@ export function createApp({
     process.env.CANVAS_API_KEY,
   ),
 } = {}) {
+  recoverInterruptedImport(dir);
   let store = new Store(dir);
   const clients = new Set();
   const token = randomUUID();
@@ -147,6 +148,7 @@ export function createApp({
       }
       const data = JSON.parse(body);
       if (url.pathname === "/api/import") {
+        if (busy) return send(409, { error: "Wait for the running agent request before importing a trajectory" });
         try {
           store = restoreArchive(store, data.archive, { fault: data.fault });
         } catch (error) {
@@ -258,15 +260,36 @@ export function createApp({
       } else if (url.pathname === "/api/agent") {
         if (busy)
           return send(409, { error: "An agent proposal is already running" });
-        if (data.baseRevision !== store.revision)
-          return send(409, { error: "Revision conflict" });
         if (
           typeof data.prompt !== "string" ||
           !data.prompt.trim() ||
           data.prompt.length > 2000 ||
-          !["mock", "codex", "dsh"].includes(data.engine)
+          !["mock", "codex", "dsh"].includes(data.engine) ||
+          (data.reviewMode !== undefined && !["stage", "commit"].includes(data.reviewMode)) ||
+          (data.reviewMode === "stage" && (typeof data.commandId !== "string" || !data.commandId || data.commandId.length > 100))
         )
           throw Error("Invalid agent request");
+        const requestFingerprint = hash(stable({
+          engine: data.engine,
+          prompt: data.prompt,
+          componentId: data.componentId,
+          baseRevision: data.baseRevision,
+          capture: data.capture === true,
+          reviewMode: data.reviewMode ?? "commit",
+        }));
+        if (data.reviewMode === "stage") {
+          const prior = store.events.find((event) => event.type === "workspace.proposal_staged" && event.payload.command_id === data.commandId);
+          if (prior) {
+            if (prior.payload.request_fingerprint !== requestFingerprint)
+              return send(409, { error: "Command ID reused with different agent request" });
+            const record = proposalRecord(store, prior.payload.proposal_id);
+            return send(200, { ...view(), proposalId: record.proposalId, baseRevision: record.baseRevision, proposal: record.proposal, status: record.status });
+          }
+          if (latestProposal(store).status === "pending")
+            return send(409, { error: "Review the pending proposal before starting another" });
+        }
+        if (data.baseRevision !== store.revision)
+          return send(409, { error: "Revision conflict" });
         if (data.engine === "codex" && !allowCodex)
           return send(422, {
             error:
@@ -399,11 +422,9 @@ export function createApp({
           await evalHooks.beforeAgentCommit?.({ data, input, proposal, store });
           validate(proposal);
           if (data.reviewMode === "stage") {
-            const staged = stageProposal(store, { proposal, baseRevision, requestEventId: message.event_id });
+            const staged = stageProposal(store, { proposal, baseRevision, requestEventId: message.event_id, commandId: data.commandId, requestFingerprint });
             return send(200, { ...view(), ...staged });
           }
-          if (data.reviewMode !== undefined && data.reviewMode !== "commit")
-            throw Object.assign(Error("Invalid review mode"), { status: 400 });
           if (store.revision !== baseRevision)
             throw Object.assign(Error("The proposal is based on an older revision. Your edit is preserved; retry against the latest version."), { status: 409 });
           store.commit({ state: proposal, baseRevision, commandId: data.commandId, actor: "agent", causedBy: [message.event_id] });
