@@ -500,7 +500,7 @@ async function runCase({ browser, caseId, runRoot, inputRoot }) {
         const modelResult = judgeMindMapModel(component);
         addAssertion({ id: `${actionItem.action_id}-mind-map-tree-${component.id}`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "mind map is a valid rooted ordered tree", pass: modelResult.pass, actual: modelResult, expected: { pass: true } });
         const dom = await inspectMindMapDom(page, actualComponentId(component.id));
-        const domResult = judgeMindMapDom(component, dom);
+        const domResult = judgeMindMapDom(component, dom, { requireViewportFit: spec.tags?.includes("v3") && spec.tags?.includes("p0") });
         addAssertion({ id: `${actionItem.action_id}-mind-map-layout-${component.id}`, subject: { action_id: actionItem.action_id }, oracle: "layout", name: "mind map nodes and connectors render with valid geometry", pass: domResult.pass, actual: domResult, expected: { pass: true, node_ids: component.nodes.map(({ id }) => id) } });
       }
       const emittedTypes = afterEvents.map((event) => event.type);

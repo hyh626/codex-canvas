@@ -17,6 +17,7 @@ const dom = () => ({
   found: true,
   nodeIds: ["root", "a", "b"],
   componentBounds: { x: 0, y: 0, width: 400, height: 300, right: 400, bottom: 300 },
+  canvasViewportBounds: { x: 0, y: 0, width: 400, height: 300, right: 400, bottom: 300 },
   nodes: [
     { id: "root", label: "Idea", bounds: { x: 100, y: 20, width: 100, height: 40, right: 200, bottom: 60 } },
     { id: "a", label: "A", bounds: { x: 20, y: 120, width: 80, height: 40, right: 100, bottom: 160 } },
@@ -68,4 +69,13 @@ test("mind map DOM judge catches a visible connector displaced away from its nod
   const result = judgeMindMapDom(tree(), observed);
   assert.equal(result.pass, false);
   assert.ok(result.errors.some((error) => error.includes("does not join")));
+});
+
+test("mind map DOM judge catches a branch clipped by the canvas viewport", () => {
+  const observed = dom();
+  observed.canvasViewportBounds.right = 250;
+  observed.canvasViewportBounds.width = 250;
+  const result = judgeMindMapDom(tree(), observed, { requireViewportFit: true });
+  assert.equal(result.pass, false);
+  assert.ok(result.errors.some(error => error.includes('clipped by the canvas viewport')));
 });

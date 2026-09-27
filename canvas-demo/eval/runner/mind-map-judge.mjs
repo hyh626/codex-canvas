@@ -82,11 +82,13 @@ export async function inspectMindMapDom(page, componentId) {
         points,
       };
     });
-    return { found: true, nodeIds: nodes.map(({ id: nodeId }) => nodeId), nodes, edges, componentBounds: rect(component) };
+    const canvas = document.querySelector('#canvas');
+    return { found: true, nodeIds: nodes.map(({ id: nodeId }) => nodeId), nodes, edges,
+      componentBounds: rect(component), canvasViewportBounds: canvas ? rect(canvas) : null };
   }, componentId);
 }
 
-export function judgeMindMapDom(component, dom, { gap = 0, connectorTolerance = 8 } = {}) {
+export function judgeMindMapDom(component, dom, { gap = 0, connectorTolerance = 8, requireViewportFit = false } = {}) {
   const errors = [];
   if (!dom?.found) return { pass: false, errors: ["mind map component is missing from rendered DOM"] };
   const expectedIds = component.nodes.map(({ id }) => id).sort();
@@ -106,6 +108,9 @@ export function judgeMindMapDom(component, dom, { gap = 0, connectorTolerance = 
       errors.push(`node ${node.id} has invalid or empty geometry`);
     if (bounds && (box.x < bounds.x - 1 || box.y < bounds.y - 1 || box.right > bounds.right + 1 || box.bottom > bounds.bottom + 1))
       errors.push(`node ${node.id} lies outside its mind map component bounds`);
+    const viewport = dom.canvasViewportBounds;
+    if (requireViewportFit && viewport && (box.x < viewport.x - 1 || box.right > viewport.right + 1))
+      errors.push(`node ${node.id} is clipped by the canvas viewport`);
   }
   for (let i = 0; i < dom.nodes.length; i++) for (let j = i + 1; j < dom.nodes.length; j++) {
     const a = dom.nodes[i].bounds, b = dom.nodes[j].bounds;

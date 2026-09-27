@@ -133,7 +133,7 @@ function render(next) {
   const selectedComponent = view.state.components.find(c => c.id === selected);
   const isMindMap = selectedComponent?.kind === "mind_map";
   if (isMindMap && mindSelection.nodeIds.some(id => !selectedComponent.nodes.some(node => node.id === id))) mindSelection = {mode:'node',nodeIds:[selectedComponent.rootId]};
-  if (isMindMap && !mindSelection.nodeIds.length) mindSelection = {mode:'node',nodeIds:[selectedComponent.rootId]};
+  if (isMindMap && !mindSelection.nodeIds.length && mindSelectionMode !== 'multi') mindSelection = {mode:'node',nodeIds:[selectedComponent.rootId]};
   $("mindMapToolbar").hidden = !isMindMap;
   $("componentToolbar").hidden = isMindMap;
   $("newCard").disabled = $("newHTML").disabled = $("duplicate").disabled =
@@ -333,7 +333,11 @@ function renderMindMap(container, component) {
     const range = [ranges[0][0], ranges[ranges.length-1][1]]; leaves.set(node.id, range); return range;
   };
   walk(byId.get(component.rootId), 0);
-  const slotY = 142, colX = 235, margin = 28, nodeW = 190;
+  const slotY = 142, margin = 28, nodeW = 180;
+  const availableWidth = $('canvas').clientWidth || 856;
+  const colX = maxDepth
+    ? Math.max(205, Math.min(235, Math.floor((availableWidth - margin * 2 - nodeW) / maxDepth)))
+    : 235;
   const nodeHeight = node => Math.max(58, Math.ceil(Array.from(node.label).reduce((n, ch) => n + (ch.codePointAt(0) > 255 ? 1 : .55), 0) / 20) * 17 + 22);
   const width = margin * 2 + maxDepth * colX + nodeW;
   const height = Math.max(150, margin * 2 + Math.max(leafIndex, 1) * slotY);
