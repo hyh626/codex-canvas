@@ -1,6 +1,7 @@
 import { sampleHTML, setHTMLText } from './html.mjs';
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
+import { applyMindMapCommand } from './mind-map.mjs';
 
 // Structured human intent is recorded alongside the deterministic state diff.
 export function componentCommand(store, data) {
@@ -13,6 +14,9 @@ export function componentCommand(store, data) {
     body,
     color,
     direction,
+    parentId,
+    order,
+    idMap,
     baseRevision,
     commandId,
   } = data;
@@ -26,6 +30,9 @@ export function componentCommand(store, data) {
       body,
       color,
       direction,
+      parentId,
+      order,
+      idMap,
       baseRevision,
     }),
   );
@@ -49,11 +56,21 @@ export function componentCommand(store, data) {
   const state = structuredClone(store.state);
   const index = state.components.findIndex((c) => c.id === componentId);
   const card = state.components[index];
-  if (!["create", "create_html"].includes(operation) && !card)
+  if (!["create", "create_html", "create_mind_map"].includes(operation) && !card)
     throw Error("Component no longer exists");
   switch (operation) {
     case "create_html":
       state.components.push({id: `html-${randomUUID().slice(0,8)}`, kind: 'html', html: sampleHTML});
+      break;
+    case 'create_mind_map':
+      if (componentId && state.components.some(component => component.id === componentId))
+        throw Error('Component ID already exists');
+      state.components.push({
+        id: componentId ?? `map-${randomUUID().slice(0,8)}`,
+        kind: 'mind_map',
+        rootId: nodeId ?? 'root',
+        nodes: [{ id: nodeId ?? 'root', parentId: null, order: 0, label: text ?? title ?? 'Central idea' }],
+      });
       break;
     case "create":
       state.components.push({
@@ -64,6 +81,10 @@ export function componentCommand(store, data) {
       });
       break;
     case "duplicate":
+      if (card.kind === 'mind_map') {
+        state.components.splice(index + 1, 0, { ...structuredClone(card), id: `map-${randomUUID().slice(0,8)}` });
+        break;
+      }
       state.components.splice(index + 1, 0, {
         ...card,
         id: `card-${randomUUID().slice(0, 8)}`,
@@ -87,6 +108,10 @@ export function componentCommand(store, data) {
       break;
     }
     case "set_text":
+      if (card.kind === 'mind_map') {
+        applyMindMapCommand(card, { operation: 'mind_map_rename', nodeId, text });
+        break;
+      }
       if (card.kind === 'html') {
         card.html = setHTMLText(card.html, nodeId, text);
         break;
@@ -96,6 +121,14 @@ export function componentCommand(store, data) {
       if (nodeId === "title" && !text.trim())
         throw Object.assign(Error("Title cannot be empty"), { status: 422 });
       card[nodeId] = text;
+      break;
+    case 'mind_map_add':
+    case 'mind_map_rename':
+    case 'mind_map_move':
+    case 'mind_map_delete':
+    case 'mind_map_duplicate':
+      if (card.kind !== 'mind_map') throw Error('Select a mind map component');
+      applyMindMapCommand(card, { operation, nodeId, parentId, order, text, idMap });
       break;
     default:
       throw Error("Unknown component operation");

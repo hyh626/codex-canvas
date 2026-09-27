@@ -1,0 +1,110 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "create/child",
+  "initial_model": {
+    "components": [
+      {
+        "id": "map-1",
+        "kind": "mind_map",
+        "rootId": "root",
+        "nodes": [
+          {
+            "id": "root",
+            "parentId": null,
+            "order": 0,
+            "label": "Launch plan"
+          }
+        ]
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "action-1-checkpoint",
+      "after_action_id": "action-1",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "map-1",
+            "kind": "mind_map",
+            "rootId": "root",
+            "nodes": [
+              {
+                "id": "root",
+                "parentId": null,
+                "order": 0,
+                "label": "Launch plan"
+              }
+            ]
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "map-1",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "action-2-checkpoint",
+      "after_action_id": "action-2",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "map-1",
+            "kind": "mind_map",
+            "rootId": "root",
+            "nodes": [
+              {
+                "id": "root",
+                "parentId": null,
+                "order": 0,
+                "label": "Launch plan"
+              },
+              {
+                "id": "research",
+                "parentId": "root",
+                "order": 0,
+                "label": "Research"
+              }
+            ]
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "map-1",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "action-2-checkpoint"
+}

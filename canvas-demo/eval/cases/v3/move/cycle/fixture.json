@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "id": "map-1",
+      "kind": "mind_map",
+      "rootId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "parentId": null,
+          "order": 0,
+          "label": "Plan"
+        },
+        {
+          "id": "research",
+          "parentId": "root",
+          "order": 0,
+          "label": "Research"
+        },
+        {
+          "id": "interviews",
+          "parentId": "research",
+          "order": 0,
+          "label": "Interviews"
+        },
+        {
+          "id": "delivery",
+          "parentId": "root",
+          "order": 1,
+          "label": "Delivery"
+        }
+      ]
+    }
+  ]
+}

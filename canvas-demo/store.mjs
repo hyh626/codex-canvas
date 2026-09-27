@@ -1,4 +1,5 @@
 import { inspectHTML } from './html.mjs';
+import { orderedMindMapNodes, validateMindMap } from './mind-map.mjs';
 import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -37,6 +38,10 @@ export function validate(state) {
     if (!/^[a-z][a-z0-9-]{0,39}$/.test(c.id) || ids.has(c.id))
       throw Error("Invalid or duplicate component ID");
     ids.add(c.id);
+    if (c.kind === 'mind_map') {
+      validateMindMap(c);
+      continue;
+    }
     if (c.kind === 'html') {
       if (Object.keys(c).sort().join() !== 'html,id,kind') throw Error('Unknown HTML component field');
       inspectHTML(c.html);
@@ -67,6 +72,11 @@ const escape = (s) =>
   );
 export function componentHTML(c) {
   if (c.kind === "html") return c.html;
+  if (c.kind === 'mind_map') {
+    const items = orderedMindMapNodes(c).map(node =>
+      `<li data-node-id="${node.id}" data-parent-id="${node.parentId ?? ''}" data-order="${node.order}">${escape(node.label)}</li>`).join('');
+    return `<article data-component-id="${c.id}" data-kind="mind_map"><ul>${items}</ul></article>\n`;
+  }
   return `<article data-component-id="${c.id}" style="--accent:${c.color}"><h2 data-node-id="title">${escape(c.title)}</h2><p data-node-id="body">${escape(c.body)}</p></article>\n`;
 }
 export function diffModel(before, after) {
@@ -82,8 +92,8 @@ export function diffModel(before, after) {
         after: right.get(id) ?? null,
       });
     else
-      for (const field of ["kind", "html", "title", "body", "color"])
-        if (left.get(id)[field] !== right.get(id)[field])
+      for (const field of ["kind", "html", "title", "body", "color", "rootId", "nodes"])
+        if (!isDeepStrictEqual(left.get(id)[field], right.get(id)[field]))
           changes.push({
             component_id: id,
             node_id: field,

@@ -60,5 +60,6 @@ export function mockLayout(html) {
   return result;
 }
 export function anchorExists(component, nodeId) {
+  if (component?.kind === 'mind_map') return component.nodes.some(node => node.id === nodeId);
   return component?.kind === 'html' ? inspectHTML(component.html).has(nodeId) : Boolean(component && ['title','body'].includes(nodeId));
 }

@@ -620,3 +620,16 @@ dialog::backdrop {
 }
 
 [hidden]{display:none!important}.html-preview{width:100%;height:350px;border:0;background:white}.card:has(.html-preview){grid-column:1/-1;padding:12px}#htmlSource{font-family:monospace;font-size:12px}
+.mind-map-toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 16px}
+.mind-map-toolbar .small{margin:0}
+#canvas:has(.mind-map){display:block;overflow:auto;padding:0;min-height:320px}
+.mind-map.card{position:relative;display:block;padding:0;margin:0;min-width:100%;min-height:150px;overflow:visible;box-shadow:none;background:transparent;border:0;border-radius:0;outline:none}
+.mind-map.card.selected{outline:none}
+.mind-map-edges{position:absolute;inset:0;overflow:visible;pointer-events:none}
+.mind-map-edges path{fill:none;stroke:#b7c5ab;stroke-width:2}
+.mind-map-nodes{position:absolute;inset:0}
+.mind-map-node{position:absolute;white-space:normal;overflow-wrap:anywhere;text-align:left;line-height:1.35;background:#fff;border:1px solid #d9e0d2;border-radius:12px;padding:10px 14px;box-shadow:0 5px 14px #35462e12;color:#34453a;z-index:1}
+.mind-map-node:first-child{font-weight:650}
+.mind-map-node.selected{outline:3px solid #668853;outline-offset:2px;background:#f3f8ed}
+.mind-map-node:focus-visible{outline:3px solid #668853;outline-offset:2px}
+.mind-map-node.comment-located{outline:3px solid #f59e0b;outline-offset:3px}

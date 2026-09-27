@@ -1,0 +1,22 @@
+{
+  "format": "canvas-render-eval-input-manifest-v2",
+  "case_count": 15,
+  "examples_per_scenario": 3,
+  "cases": [
+    "create/root",
+    "create/child",
+    "create/sibling",
+    "text/inline",
+    "text/cancel",
+    "text/conflict",
+    "branch/subtree",
+    "branch/duplicate",
+    "branch/delete-undo",
+    "move/reparent",
+    "move/reorder",
+    "move/cycle",
+    "selection/node",
+    "selection/subtree",
+    "selection/multi"
+  ]
+}

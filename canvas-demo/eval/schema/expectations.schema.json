@@ -30,6 +30,7 @@
             }
           },
           "expected_model": { "type": "object" },
+          "expected_selection_context": { "type": "object" },
           "invariants": {
             "type": "array",
             "items": { "$ref": "#/$defs/invariant" }

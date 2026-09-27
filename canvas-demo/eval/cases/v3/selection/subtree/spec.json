@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "case_id": "selection/subtree",
+  "scenario_id": "selection",
+  "example_id": "subtree",
+  "title": "Prepare exact agent context for subtree",
+  "seed": 263301,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "map-1",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": null,
+  "tags": [
+    "p0",
+    "v3",
+    "mind-map",
+    "selection",
+    "agent-context",
+    "exact-payload"
+  ]
+}

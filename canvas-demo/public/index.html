@@ -40,7 +40,7 @@
           </ol>
         </div>
         <p class="footnote">
-          Local demo · single writer<br />Cards and editable static HTML components.
+          Local demo · single writer<br />Cards, editable static HTML, and mind maps.
         </p>
       </aside>
       <section class="workspace">
@@ -68,14 +68,19 @@
             <div class="eyebrow">LIVE CANVAS</div>
             <h2>Your model, made visible.</h2>
           </div>
-          <button id="newHTML">＋ HTML component</button><button id="newCard" class="primary">＋ New card</button>
+          <button id="newHTML">＋ HTML component</button><button id="newCard" class="primary">＋ New card</button><button id="newMindMap">＋ Mind map</button>
         </div>
-        <div class="card-toolbar" aria-label="Component actions">
+        <div class="card-toolbar" aria-label="Component actions" id="componentToolbar">
           <button id="duplicate">Duplicate</button
           ><button id="moveEarlier">← Move earlier</button
           ><button id="moveLater">Move later →</button
           ><button id="deleteCard">Delete</button>
           <span class="small">Double-click a title or body to edit it.</span>
+        </div>
+        <div class="mind-map-toolbar" id="mindMapToolbar" hidden aria-label="Mind map actions">
+          <button id="selectNode">Select node</button><button id="selectSubtree">Select subtree</button><button id="selectMulti">Multi-select</button>
+          <button id="addMindNode">＋ Child</button><button id="duplicateMindNode">Duplicate branch</button><button id="deleteMindNode">Delete branch</button>
+          <button id="mindEarlier">↑ Reorder</button><button id="mindLater">↓ Reorder</button><span id="mindSelectionLabel" class="small"></span>
         </div>
         <div id="canvas" aria-label="Canvas components"></div>
         <section class="composer">

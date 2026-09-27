@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:canvas-demo:model:v1",
-  "title": "Canvas card and static HTML model",
+  "title": "Canvas card, static HTML, and mind map model",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -61,6 +61,32 @@
               "html": {
                 "type": "string",
                 "maxLength": 12000
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "rootId", "nodes"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+              "kind": { "const": "mind_map" },
+              "rootId": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+              "nodes": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 64,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["id", "parentId", "order", "label"],
+                  "properties": {
+                    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+                    "parentId": { "type": ["string", "null"], "pattern": "^[a-z][a-z0-9-]{0,39}$" },
+                    "order": { "type": "integer", "minimum": 0 },
+                    "label": { "type": "string", "minLength": 1, "maxLength": 120 }
+                  }
+                }
               }
             }
           }

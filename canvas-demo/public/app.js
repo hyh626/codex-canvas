@@ -9,6 +9,8 @@ let view,
   running = false,
   runningRevision = null,
   inlineTarget = null,
+  mindSelection = { mode: "node", nodeIds: [] },
+  mindSelectionMode = "node",
   selectedScenarioId = scenarios[0].id;
 const evalMode = new URLSearchParams(location.search).get("eval") === "1";
 const inlineDraftKey = "canvas.inline-draft.v1";
@@ -40,8 +42,19 @@ function fillEditor() {
   const c = view.state.components.find((c) => c.id === selected);
   if (!c) return;
   const html = c.kind === 'html';
+  const mindMap = c.kind === 'mind_map';
   $('cardFields').hidden = html;
   $('htmlFields').hidden = !html;
+  $('editor').hidden = mindMap;
+  $('reloadEditor').hidden = mindMap;
+  if (mindMap) {
+    $('selected').textContent = c.id;
+    const previousAnchor = $('anchor').value;
+    $('anchor').replaceChildren(...c.nodes.map(node => new Option(node.label, node.id)));
+    if (c.nodes.some(node => node.id === previousAnchor)) $('anchor').value = previousAnchor;
+    else $('anchor').value = mindSelection.nodeIds[0] ?? c.rootId;
+    return;
+  }
   for (const key of ['title','body','color']) { $(key).disabled = html; if (!html) $(key).value = c[key]; }
   if (html) $('htmlSource').value = c.html;
   const previousAnchor = $('anchor').value;
@@ -117,6 +130,12 @@ function render(next) {
   $("moveEarlier").disabled = selectedIndex === 0;
   $("moveLater").disabled = selectedIndex === view.state.components.length - 1;
   $("deleteCard").disabled = view.state.components.length === 1;
+  const selectedComponent = view.state.components.find(c => c.id === selected);
+  const isMindMap = selectedComponent?.kind === "mind_map";
+  if (isMindMap && mindSelection.nodeIds.some(id => !selectedComponent.nodes.some(node => node.id === id))) mindSelection = {mode:'node',nodeIds:[selectedComponent.rootId]};
+  if (isMindMap && !mindSelection.nodeIds.length) mindSelection = {mode:'node',nodeIds:[selectedComponent.rootId]};
+  $("mindMapToolbar").hidden = !isMindMap;
+  $("componentToolbar").hidden = isMindMap;
   $("newCard").disabled = $("newHTML").disabled = $("duplicate").disabled =
     view.state.components.length >= 8;
   $("model").textContent = JSON.stringify(
@@ -131,6 +150,7 @@ function render(next) {
       if (dirty && !confirm("Discard your uncommitted edit?")) return;
       if (selected === c.id) return;
       selected = c.id;
+      mindSelection = c.kind === 'mind_map' ? {mode:'node',nodeIds:[c.rootId]} : {mode:'node',nodeIds:[]};
       dirty = false;
       render(view);
     };
@@ -145,6 +165,16 @@ function render(next) {
     card.tabIndex = 0;
     card.setAttribute("aria-label", c.id);
     card.dataset.componentId = c.id;
+    if (c.kind === 'mind_map') {
+      const map = document.createElement('article');
+      map.className = 'mind-map card' + (c.id === selected ? ' selected' : '');
+      map.dataset.componentId = c.id;
+      map.setAttribute('aria-label', `Mind map ${c.id}`);
+      map.tabIndex = 0;
+      renderMindMap(map, c);
+      $('canvas').append(map);
+      continue;
+    }
     if (c.kind === 'html') {
       card.append(htmlPreview(c, choose, openInline, id => { $('anchor').value = id; }));
       const label = document.createElement('small'); label.textContent = c.id + ' / HTML · double-click text to edit'; card.append(label);
@@ -231,16 +261,22 @@ function render(next) {
       status("Comment copied into the agent prompt. Review it, then run.");
     };
     const component = view.state.components.find(c => c.id === selected);
-    const ids = component.kind === 'html' ? htmlNodes(component.html).map(n => n.id) : ['title','body'];
+    const ids = component.kind === 'html' ? htmlNodes(component.html).map(n => n.id) : component.kind === 'mind_map' ? component.nodes.map(n => n.id) : ['title','body'];
     const located = ids.includes(comment.node_id);
     const locate = document.createElement('button'); locate.textContent = located ? 'Locate node' : 'Node removed · historical comment'; locate.disabled = !located;
-    locate.onclick = () => locateHTML(selected, comment.node_id);
+    locate.onclick = () => {
+      if (component.kind === 'mind_map') {
+        const node = [...document.querySelectorAll(`[data-component-id="${CSS.escape(selected)}"] .mind-map-node[data-node-id]`)].find(el => el.dataset.nodeId === comment.node_id);
+        node?.scrollIntoView({block:'nearest',inline:'nearest'});
+        if (node) { node.classList.add('comment-located'); setTimeout(() => node.classList.remove('comment-located'),1800); }
+      } else locateHTML(selected, comment.node_id);
+    };
     item.append(anchor, text, locate, use);
     if (!comment.resolved) {
       const target = document.createElement("select");
       target.setAttribute("aria-label", "New comment anchor");
       for (const candidate of view.state.components) {
-        const nodes = candidate.kind === "html" ? htmlNodes(candidate.html).map((node) => node.id) : ["title", "body"];
+        const nodes = candidate.kind === "html" ? htmlNodes(candidate.html).map((node) => node.id) : candidate.kind === 'mind_map' ? candidate.nodes.map(node => node.id) : ["title", "body"];
         for (const nodeId of nodes) target.append(new Option(`${candidate.id} · ${nodeId}`, `${candidate.id}/${nodeId}`));
       }
       target.value = `${comment.component_id}/${comment.node_id}`;
@@ -266,7 +302,85 @@ function render(next) {
     $("comments").append(item);
   }
   renderScenario();
+  if (isMindMap) {
+    const ids = mindSelection.nodeIds;
+    $('mindSelectionLabel').textContent = ids.length ? `${mindSelection.mode}: ${ids.join(', ')}` : 'Choose a node';
+    $('deleteMindNode').disabled = !ids.length || ids.includes(selectedComponent.rootId);
+    $('duplicateMindNode').disabled = !ids.length || ids.includes(selectedComponent.rootId) || mindSelection.mode !== 'node';
+    $('addMindNode').disabled = !ids.length;
+    const activeNode = selectedComponent.nodes.find(node => node.id === ids[0]);
+    const siblings = activeNode ? selectedComponent.nodes.filter(node => node.parentId === activeNode.parentId) : [];
+    $('mindEarlier').disabled = !activeNode || mindSelection.mode !== 'node' || activeNode.id === selectedComponent.rootId || activeNode.order === 0;
+    $('mindLater').disabled = !activeNode || mindSelection.mode !== 'node' || activeNode.id === selectedComponent.rootId || activeNode.order >= siblings.length - 1;
+  }
   if (!dirty) fillEditor();
+}
+
+function renderMindMap(container, component) {
+  const byId = new Map(component.nodes.map(node => [node.id, node]));
+  const children = new Map();
+  for (const node of component.nodes) {
+    const list = children.get(node.parentId) ?? [];
+    list.push(node); children.set(node.parentId, list);
+  }
+  for (const list of children.values()) list.sort((a,b) => a.order-b.order);
+  const leaves = new Map(); let leafIndex = 0, maxDepth = 0;
+  const walk = (node, depth) => {
+    maxDepth = Math.max(maxDepth, depth);
+    const kids = children.get(node.id) ?? [];
+    if (!kids.length) { const index = leafIndex++; leaves.set(node.id, [index, index]); return [index,index]; }
+    const ranges = kids.map(child => walk(child, depth + 1));
+    const range = [ranges[0][0], ranges[ranges.length-1][1]]; leaves.set(node.id, range); return range;
+  };
+  walk(byId.get(component.rootId), 0);
+  const slotY = 142, colX = 235, margin = 28, nodeW = 190;
+  const nodeHeight = node => Math.max(58, Math.ceil(Array.from(node.label).reduce((n, ch) => n + (ch.codePointAt(0) > 255 ? 1 : .55), 0) / 20) * 17 + 22);
+  const width = margin * 2 + maxDepth * colX + nodeW;
+  const height = Math.max(150, margin * 2 + Math.max(leafIndex, 1) * slotY);
+  container.style.width = `${width}px`; container.style.height = `${height}px`;
+  container.dataset.mindMapId = component.id;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.classList.add('mind-map-edges'); svg.setAttribute('width', width); svg.setAttribute('height', height); svg.setAttribute('aria-hidden','true');
+  const positions = new Map();
+  const nodes = document.createElement('div'); nodes.className = 'mind-map-nodes';
+  const place = (node, depth) => {
+    const [a,b] = leaves.get(node.id); const x = margin + depth * colX; const h = nodeHeight(node); const y = margin + ((a+b)/2) * slotY + (slotY-h)/2;
+    positions.set(node.id, {x,y,h});
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'mind-map-node' + (mindSelection.nodeIds.includes(node.id) ? ' selected' : '');
+    el.dataset.nodeId = node.id; el.textContent = node.label; el.title = 'Click to select; double-click to rename';
+    el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.width = `${nodeW}px`; el.style.height = `${h}px`;
+    el.setAttribute('aria-pressed', String(mindSelection.nodeIds.includes(node.id)));
+    el.onclick = event => {
+      event.stopPropagation();
+      if (mindSelectionMode === 'multi' || event.shiftKey) {
+        const ids = new Set(mindSelection.nodeIds); ids.has(node.id) ? ids.delete(node.id) : ids.add(node.id);
+        mindSelection = { mode:'multi', nodeIds:[...ids] };
+      } else mindSelection = { mode:mindSelectionMode, nodeIds:[node.id] };
+      render(view);
+    };
+    el.ondblclick = event => { event.stopPropagation(); openMindMapInline(component,node); };
+    el.onkeydown = event => { if (event.key === 'F2' || event.key === 'Enter' && event.detail === 0) { event.preventDefault(); openMindMapInline(component,node); } };
+    nodes.append(el);
+    for (const child of children.get(node.id) ?? []) place(child, depth+1);
+  };
+  place(byId.get(component.rootId), 0);
+  for (const node of component.nodes) if (node.id !== component.rootId) {
+    const p = positions.get(node.parentId), q = positions.get(node.id);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','path');
+    line.setAttribute('d',`M ${p.x+nodeW} ${p.y+p.h/2} C ${p.x+nodeW+25} ${p.y+p.h/2}, ${q.x-25} ${q.y+q.h/2}, ${q.x} ${q.y+q.h/2}`);
+    line.dataset.edgeFrom = node.parentId; line.dataset.edgeTo = node.id; svg.append(line);
+  }
+  container.append(svg,nodes);
+}
+function openMindMapInline(component,node) {
+  if (!discardDraft()) return;
+  selected = component.id; mindSelection = {mode:'node',nodeIds:[node.id]}; render(view);
+  inlineTarget = {componentId:component.id,nodeId:node.id,baseRevision:view.revision,mindMap:true};
+  $('inlineLabel').textContent = `Rename ${node.id}`;
+  $('inlineContext').textContent = `${component.id} · mind map node · revision ${view.revision}`;
+  $('inlineText').value = node.label; $('inlineText').maxLength = 120;
+  $('inlineError').textContent = ''; $('inlineEdit').showModal(); $('inlineText').focus();
 }
 
 function observedUIState() {
@@ -386,7 +500,7 @@ function openInline(card, nodeId) {
 $("inlineText").addEventListener("input", saveInlineDraft);
 $('rebaseInline').onclick = () => {
   const c = view.state.components.find(c => c.id === inlineTarget.componentId);
-  const node = c?.kind === 'html' ? htmlNodes(c.html).find(n => n.id === inlineTarget.nodeId && n.leaf) : c && {text:c[inlineTarget.nodeId]};
+  const node = c?.kind === 'html' ? htmlNodes(c.html).find(n => n.id === inlineTarget.nodeId && n.leaf) : c?.kind === 'mind_map' ? c.nodes.find(n => n.id === inlineTarget.nodeId) && {text:c.nodes.find(n => n.id === inlineTarget.nodeId).label} : c && {text:c[inlineTarget.nodeId]};
   if (!node) { $('inlineError').textContent = 'Target no longer exists or is not a text leaf.'; return; }
   $('inlineContext').textContent = `Latest r${view.revision}: ${node.text}. Your draft is retained. Commit explicitly to replace this text.`;
   inlineTarget.baseRevision = view.revision;
@@ -402,11 +516,9 @@ $("inlineForm").onsubmit = async (event) => {
     return;
   }
   try {
-    const next = await api("component", {
-      operation: "set_text",
-      ...inlineTarget,
-      text: $("inlineText").value,
-    });
+    const next = await api(inlineTarget.mindMap ? "command" : "component", inlineTarget.mindMap
+      ? { operation: 'mind_map_rename', componentId:inlineTarget.componentId, nodeId:inlineTarget.nodeId, text:$('inlineText').value, baseRevision:inlineTarget.baseRevision }
+      : { operation: "set_text", ...inlineTarget, text: $("inlineText").value });
     $("inlineEdit").close();
     clearInlineDraft();
     render(next);
@@ -440,6 +552,39 @@ for (const [id, operation, direction] of [
       render(next);
     }, `${operation} committed. Undo restores the previous state.`);
 }
+$('newMindMap').onclick = () => act(async () => {
+  if (!discardDraft()) return false;
+  const next = await api('command',{operation:'create_mind_map',componentId:`map-${crypto.randomUUID().slice(0,8)}`,baseRevision:view.revision});
+  selected = next.state.components.at(-1).id; mindSelection={mode:'node',nodeIds:[next.state.components.at(-1).rootId]}; render(next);
+}, 'Mind map created.');
+for (const [id, mode] of [['selectNode','node'],['selectSubtree','subtree'],['selectMulti','multi']]) $(id).onclick=()=>{
+  mindSelectionMode=mode;
+  if (mindSelection.nodeIds.length) mindSelection={mode,nodeIds:mode==='multi'?mindSelection.nodeIds:[mindSelection.nodeIds[0]]};
+  render(view);
+};
+async function mindCommand(operation, extra={}) {
+  if (!discardDraft()) return false;
+  const nodeId=mindSelection.nodeIds[0];
+  const next=await api('command',{operation,componentId:selected,nodeId,parentId:nodeId,baseRevision:view.revision,...extra});
+  if (operation==='mind_map_add') {
+    const map=next.state.components.find(c=>c.id===selected);
+    const added=map.nodes.find(n=>!view.state.components.find(c=>c.id===selected).nodes.some(old=>old.id===n.id));
+    if (added) { mindSelectionMode='node'; mindSelection={mode:'node',nodeIds:[added.id]}; }
+  }
+  render(next);
+}
+$('addMindNode').onclick=()=>act(()=>mindCommand('mind_map_add',{text:'New idea'}),'Child node added.');
+$('deleteMindNode').onclick=()=>act(()=>mindCommand('mind_map_delete'),'Branch deleted.');
+$('duplicateMindNode').onclick=()=>act(()=>mindCommand('mind_map_duplicate'),'Branch duplicated.');
+$('mindEarlier').onclick=()=>act(async()=>{
+  const map=view.state.components.find(c=>c.id===selected), node=map.nodes.find(n=>n.id===mindSelection.nodeIds[0]);
+  return mindCommand('mind_map_move',{parentId:node.parentId,order:Math.max(0,node.order-1)});
+},'Node reordered.');
+$('mindLater').onclick=()=>act(async()=>{
+  const map=view.state.components.find(c=>c.id===selected), node=map.nodes.find(n=>n.id===mindSelection.nodeIds[0]);
+  const peers=map.nodes.filter(n=>n.parentId===node.parentId);
+  return mindCommand('mind_map_move',{parentId:node.parentId,order:Math.min(peers.length-1,node.order+1)});
+},'Node reordered.');
 $("editor").oninput = () => {
   dirty = true;
 };
@@ -513,6 +658,7 @@ $("run").onclick = () =>
           engine: $("engine").value,
           capture: $("capture").checked,
           componentId: selected,
+          ...(view.state.components.find(c=>c.id===selected)?.kind === 'mind_map' && mindSelection.nodeIds.length ? { selection: mindSelection } : {}),
           baseRevision: view.revision,
           reviewMode: $("reviewBeforeCommit").checked ? "stage" : "commit",
         }),

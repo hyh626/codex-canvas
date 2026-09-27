@@ -32,12 +32,14 @@ The proposed model-to-render evaluation bundle is specified in [eval/FORMAT.zh-C
 
 The [v2 CUJ TDD corpus](eval/V2-CUJ-TDD.md) adds 24 cases for proposal review, concurrent edits, failure handling, coordinated changes, comments, restore, reconnect, and accessibility. Validate inputs with `npm run eval:validate:inputs`, then run `npm run eval:run -- --corpus v2`.
 
-The [proposed mind map CUJs](MIND-MAP-CUJ-PLAN.md) define 27 v3 cases for hierarchical map creation, editing, restructuring, selection-driven agent collaboration, exploration, comments, and recovery. Mind map support and these eval cases are planned, not implemented.
+The [mind map CUJs](MIND-MAP-CUJ-PLAN.md) define 27 v3 cases. The first 15 are implemented and pass: create a map, edit or rearrange branches, and turn a node, subtree, or multiple selected nodes into structured agent context. Run `npm run eval:validate:inputs -- --corpus v3` and `npm run eval:run -- --corpus v3`. The remaining 12 cases cover large-map exploration, agent review, comments, and recovery.
+
+Use **＋ Mind map** to create one. Click a node to select it, choose node/subtree/multi selection in the toolbar, and double-click to rename. The toolbar adds, duplicates, deletes, and reorders branches. The agent receives selected IDs, labels, hierarchy, ancestor context, comments, and revision; proposals are checked against that selection. The current agent protocol also sends the full snapshot and has an 8 KB context limit.
 
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot
-contains cards `{id, title, body, color}` or static HTML components `{id, kind: "html", html}`.
+contains cards `{id, title, body, color}`, static HTML components `{id, kind: "html", html}`, or ordered tree mind maps `{id, kind: "mind_map", rootId, nodes}`.
 The HTML source in a committed snapshot is authoritative and editable through the API. The server is the only writer.
 HTML and `canvas.json` under `.data/workspace/` are rebuildable projections. **Do not edit
 those projected files directly**: restart intentionally reconstructs them from committed events.

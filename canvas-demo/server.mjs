@@ -12,6 +12,7 @@ import { scenarioById } from "./scenarios.mjs";
 import { decideProposal, latestProposal, proposalRecord, stageProposal } from "./proposal-review.mjs";
 import { changeComment, currentComments } from "./comment-lifecycle.mjs";
 import { recoverInterruptedImport, restoreArchive } from "./archive-import.mjs";
+import { applyMindMapCommand, assertScopedMindMapProposal, selectionContext } from './mind-map.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
@@ -204,7 +205,7 @@ export function createApp({
           selectedComponentId: scenario.selectedComponentId,
         });
       }
-      if (url.pathname === "/api/component") {
+      if (url.pathname === "/api/component" || url.pathname === "/api/command") {
         const event = componentCommand(store, data);
         const beforeIds = new Set(
           store.get(event.payload.before).components.map((c) => c.id),
@@ -273,6 +274,7 @@ export function createApp({
           engine: data.engine,
           prompt: data.prompt,
           componentId: data.componentId,
+          selection: data.selection,
           baseRevision: data.baseRevision,
           capture: data.capture === true,
           reviewMode: data.reviewMode ?? "commit",
@@ -304,9 +306,19 @@ export function createApp({
         try {
           const baseRevision = store.revision;
           const snapshot = structuredClone(store.state);
+          const selectedComponent = snapshot.components.find(component => component.id === data.componentId);
+          if (!selectedComponent) throw Error('Select a component');
+          if (selectedComponent.kind === 'mind_map' && !data.selection)
+            throw Error('Select mind map nodes for the agent');
+          if (data.selection && selectedComponent.kind !== 'mind_map')
+            throw Error('Mind map selection requires a mind map component');
+          const selectedMapContext = data.selection
+            ? { ...selectionContext(selectedComponent, data.selection, baseRevision, currentComments(store.events)), instruction: data.prompt }
+            : null;
           const message = store.append(
             "user.message",
-            { text: data.prompt, component_id: data.componentId },
+            { text: data.prompt, component_id: data.componentId,
+              ...(selectedMapContext ? { selection_context: store.put(selectedMapContext) } : {}) },
             "human",
           );
           const scenarioBoundary =
@@ -317,6 +329,7 @@ export function createApp({
             snapshot,
             baseRevision,
             selectedComponent: data.componentId,
+            ...(selectedMapContext ? { mindMapSelection: selectedMapContext } : {}),
             instruction: data.prompt,
             recentChanges: store.events
               .filter(
@@ -352,7 +365,15 @@ export function createApp({
               (c) => c.id === data.componentId,
             );
             if (!c) throw Error("Select a component");
-            if (c.kind === 'html') {
+            if (c.kind === 'mind_map') {
+              const target = selectedMapContext.selection.nodeIds[0];
+              if (/add|新增|添加|break|拆分/i.test(data.prompt))
+                applyMindMapCommand(c, { operation: 'mind_map_add', parentId: target,
+                  text: data.prompt.replace(/^(add|新增|添加)\s*[:：]?\s*/i, '').slice(0,120) || 'New idea' });
+              else
+                applyMindMapCommand(c, { operation: 'mind_map_rename', nodeId: target,
+                  text: data.prompt.replace(/^(title|标题|rename)\s*[:：]?\s*/i, '').slice(0,120) });
+            } else if (c.kind === 'html') {
               if (/layout|布局|横向/i.test(data.prompt)) c.html = mockLayout(c.html);
               else c.html = setHTMLText(c.html, 'title', data.prompt.replace(/^(title|标题)\s*[:：]\s*/i, '').slice(0,120));
             } else if (/add|新增|添加/i.test(data.prompt))
@@ -421,9 +442,10 @@ export function createApp({
             proposal;
           await evalHooks.beforeAgentCommit?.({ data, input, proposal, store });
           validate(proposal);
+          if (selectedMapContext) assertScopedMindMapProposal(snapshot, proposal, selectedMapContext);
           if (data.reviewMode === "stage") {
             const staged = stageProposal(store, { proposal, baseRevision, requestEventId: message.event_id, commandId: data.commandId, requestFingerprint });
-            return send(200, { ...view(), ...staged });
+            return send(200, { ...view(), ...staged, selectionContext: selectedMapContext });
           }
           if (store.revision !== baseRevision)
             throw Object.assign(Error("The proposal is based on an older revision. Your edit is preserved; retry against the latest version."), { status: 409 });

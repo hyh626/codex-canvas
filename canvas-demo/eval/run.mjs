@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
@@ -15,6 +16,7 @@ import { validateV2Inputs } from "./validate-v2-inputs.mjs";
 import { ArtifactStore, capturePage, partialEqual, writeJson, writeJsonl } from "./runner/artifacts.mjs";
 import { executeV2P0Action } from "./runner/v2-p0-actions.mjs";
 import { executeV2P1Action } from "./runner/v2-p1-actions.mjs";
+import { inspectMindMapDom, judgeMindMapDom, judgeMindMapModel } from "./runner/mind-map-judge.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(here, "..");
@@ -24,6 +26,26 @@ const defaultRunsRoot = path.join(here, "runs");
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 const readJsonl = (file) => fs.readFileSync(file, "utf8").trim().split("\n").filter(Boolean).map(JSON.parse);
+
+function caseConfigForV3(spec, fixture, expectations, actions) {
+  const semanticFingerprint = crypto.createHash("sha256")
+    .update(`${JSON.stringify({ spec, fixture, expectations, actions }, null, 2)}\n`)
+    .digest("hex");
+  return {
+    format: "canvas-render-eval-case-v1",
+    case_id: spec.case_id,
+    scenario_id: spec.scenario_id,
+    example_id: spec.example_id,
+    title: spec.title,
+    seed: spec.seed,
+    generation: { mode: "execute_actions", parameterized_scenario: true },
+    viewport: spec.viewport,
+    view_policy: { ...spec.view_policy, selected_scenario_id: "human-edit", open_panel: "none" },
+    paths: { expectations: "expectations.json", actions: "actions.jsonl", action_results: "execution/action-results.jsonl", events: "trajectory/events.jsonl", trajectory_blobs: "trajectory/blobs/sha256", id_aliases: "execution/id-aliases.json", captures: "observations/captures.jsonl", artifacts: "artifacts/sha256", assertions: "results/assertions.jsonl", summary: "results/summary.json" },
+    oracles: { structural: true, visual_regression: { enabled: false, baseline_manifest: null }, visual_quality: { enabled: false, rubric_version: "v1", blocking: false } },
+    reproducibility: { semantic_fingerprint: semanticFingerprint, generated_id_strategy: "deterministic-provider", volatile_event_fields: ["/event_id", "/session_id", "/timestamp"] },
+  };
+}
 
 function runId() {
   return `${new Date().toISOString().replaceAll(":", "-").replace(/\.\d{3}Z$/, "Z")}_${execFileSync("git", ["rev-parse", "--short=8", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim()}_chromium`;
@@ -63,7 +85,29 @@ function modelInvariantResult(invariant, actualModel, references) {
 
 function normalizeModel(model, aliases) {
   const normalized = structuredClone(model);
-  for (const component of normalized.components) component.id = aliases.get(component.id) ?? component.id;
+  for (const component of normalized.components) {
+    component.id = aliases.get(component.id) ?? component.id;
+    if (component.kind === "mind_map" && Array.isArray(component.nodes)) {
+      const children = new Map();
+      for (const node of component.nodes) {
+        const siblings = children.get(node.parentId) ?? [];
+        siblings.push(node);
+        children.set(node.parentId, siblings);
+      }
+      for (const siblings of children.values()) siblings.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+      const ordered = [];
+      const seen = new Set();
+      const visit = (node) => {
+        if (!node || seen.has(node.id)) return;
+        seen.add(node.id);
+        ordered.push(node);
+        for (const child of children.get(node.id) ?? []) visit(child);
+      };
+      visit(component.nodes.find(({ id }) => id === component.rootId));
+      for (const node of component.nodes) visit(node);
+      component.nodes = ordered;
+    }
+  }
   return normalized;
 }
 
@@ -154,9 +198,12 @@ async function runCase({ browser, caseId, runRoot, inputRoot }) {
   const sourceDir = path.join(inputRoot, corpusScenarioId, exampleId);
   const scenarioId = scenarioById.has(corpusScenarioId) ? corpusScenarioId : "human-edit";
   const spec = readJson(path.join(sourceDir, "spec.json"));
-  const caseConfig = readJson(path.join(sourceDir, "case.json"));
   const expectations = readJson(path.join(sourceDir, "expectations.json"));
   const actions = readJsonl(path.join(sourceDir, "actions.jsonl"));
+  const caseConfigPath = path.join(sourceDir, "case.json");
+  const caseConfig = fs.existsSync(caseConfigPath)
+    ? readJson(caseConfigPath)
+    : caseConfigForV3(spec, readJson(path.join(sourceDir, "fixture.json")), expectations, actions);
   const caseDir = path.join(runRoot, "cases", corpusScenarioId, exampleId);
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), `canvas-eval-${corpusScenarioId}-${exampleId}-`));
   const artifacts = new ArtifactStore(path.join(caseDir, "artifacts", "sha256"));
@@ -365,6 +412,49 @@ async function runCase({ browser, caseId, runRoot, inputRoot }) {
         } catch (error) {
           outcome = { ok: false, status: 500, body: { error: error.message } };
         }
+      } else if (actionItem.kind === "mind_map_rename_cancel") {
+        const input = actionItem.input;
+        const componentId = actualComponentId(input.component_id ?? requestedAlias);
+        await page.evaluate(({ componentId, nodeId, text, baseRevision }) => globalThis.__canvasEval.openInline(componentId, nodeId, text, baseRevision), {
+          componentId, nodeId: input.node_id, text: input.draft_text, baseRevision: input.base_revision ?? app.store.revision,
+        });
+        await page.locator("#inlineText").fill(input.draft_text);
+        await page.locator("#cancelInline").click();
+        outcome = { ok: true, status: 200, body: {} };
+      } else if (["mind_map_create", "mind_map_add", "mind_map_rename", "mind_map_move", "mind_map_duplicate", "mind_map_delete"].includes(actionItem.kind)) {
+        const input = actionItem.input;
+        const operation = actionItem.kind === "mind_map_create" ? "create_mind_map" : actionItem.kind;
+        const payload = {
+          operation,
+          componentId: actualComponentId(input.component_id ?? requestedAlias),
+          baseRevision: input.base_revision ?? app.store.revision,
+          commandId: input.command_id ?? `eval-${actionItem.step}`,
+        };
+        if (input.node_id) payload.nodeId = input.node_id;
+        if (input.parent_id) payload.parentId = input.parent_id;
+        if (input.order !== undefined) payload.order = input.order;
+        if (input.text !== undefined) payload.text = input.text;
+        else if (input.label !== undefined) payload.text = input.label;
+        else if (input.root_label !== undefined) payload.text = input.root_label;
+        if (input.root_id) payload.nodeId = input.root_id;
+        if (input.id_map) payload.idMap = input.id_map;
+        outcome = await post("command", payload);
+        if (outcome.ok) await page.evaluate(({ body, scenarioId, selectedComponentId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId, selectedComponentId }), { body: outcome.body, scenarioId, selectedComponentId: outcome.body.selectedComponentId ?? payload.componentId });
+        else await page.evaluate((message) => globalThis.__canvasEval.showError(message), outcome.body.error);
+      } else if (actionItem.kind === "selection_request") {
+        const input = actionItem.input;
+        outcome = await post("agent", {
+          prompt: input.instruction,
+          engine: "mock",
+          componentId: actualComponentId(input.component_id ?? requestedAlias),
+          baseRevision: input.base_revision ?? app.store.revision,
+          capture: input.capture === true,
+          reviewMode: "stage",
+          commandId: `eval-selection-${actionItem.step}`,
+          selection: { mode: input.selection.mode, nodeIds: input.selection.node_ids },
+        });
+        if (outcome.ok) await page.evaluate(({ body, scenarioId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId }), { body: outcome.body, scenarioId });
+        else await page.evaluate((message) => globalThis.__canvasEval.showError(message), outcome.body.error);
       } else {
         outcome = { ok: false, status: 501, body: { error: `Runner does not implement action kind: ${actionItem.kind}` }, unsupported: true };
       }
@@ -402,6 +492,17 @@ async function runCase({ browser, caseId, runRoot, inputRoot }) {
       const statusMatches = actualStatus === checkpoint.expected_action_status && !outcome.unsupported;
       addAssertion({ id: `${actionItem.action_id}-status`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "action status", pass: statusMatches, actual: actualStatus, expected: checkpoint.expected_action_status, message: statusMatches ? undefined : `HTTP ${outcome.status}: ${outcome.body?.error ?? "unexpected status"}` });
       addAssertion({ id: `${actionItem.action_id}-model`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "expected model", pass: stable(normalized) === stable(checkpoint.expected_model), actual: normalized, expected: checkpoint.expected_model });
+      if (Object.hasOwn(checkpoint, "expected_selection_context")) {
+        const actualContext = outcome.body?.selectionContext ?? null;
+        addAssertion({ id: `${actionItem.action_id}-selection-context`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "agent receives canonical selected tree context", pass: stable(actualContext) === stable(checkpoint.expected_selection_context), actual: actualContext, expected: checkpoint.expected_selection_context });
+      }
+      for (const component of normalized.components.filter((item) => item.kind === "mind_map")) {
+        const modelResult = judgeMindMapModel(component);
+        addAssertion({ id: `${actionItem.action_id}-mind-map-tree-${component.id}`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "mind map is a valid rooted ordered tree", pass: modelResult.pass, actual: modelResult, expected: { pass: true } });
+        const dom = await inspectMindMapDom(page, actualComponentId(component.id));
+        const domResult = judgeMindMapDom(component, dom);
+        addAssertion({ id: `${actionItem.action_id}-mind-map-layout-${component.id}`, subject: { action_id: actionItem.action_id }, oracle: "layout", name: "mind map nodes and connectors render with valid geometry", pass: domResult.pass, actual: domResult, expected: { pass: true, node_ids: component.nodes.map(({ id }) => id) } });
+      }
       const emittedTypes = afterEvents.map((event) => event.type);
       const listedCommitCount = checkpoint.expected_events.sequence.filter((type) => type === "workspace.edit_committed").length;
       const expectedCommitCount = ["load_scenario", "seed_fixture"].includes(actionItem.kind)
@@ -594,7 +695,7 @@ function parseArguments(argv) {
     else if (argv[index] === "--corpus") {
       const value = argv[++index];
       if (!value) throw Error("--corpus requires a path or version (v1, v2)");
-      corpus = value === "v1" || value === "v2" ? path.join(here, "cases", value) : value;
+      corpus = ["v1", "v2", "v3"].includes(value) ? path.join(here, "cases", value) : value;
     }
     else throw Error(`Unknown argument: ${argv[index]}`);
   }

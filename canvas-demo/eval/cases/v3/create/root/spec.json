@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "case_id": "create/root",
+  "scenario_id": "create",
+  "example_id": "root",
+  "title": "Create and label a root",
+  "seed": 262653,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "map-1",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": null,
+  "tags": [
+    "p0",
+    "v3",
+    "mind-map",
+    "create",
+    "root"
+  ]
+}

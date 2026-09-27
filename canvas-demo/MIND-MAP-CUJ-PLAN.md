@@ -1,6 +1,6 @@
 # Mind map CUJs: proposed v3 TDD corpus
 
-Status: **planned; no mind map product support or v3 eval cases are implemented yet.**
+Status: **P0 implemented and evaluated; P1 remains planned.** The 15 P0 cases across creation, text, branching, moving, and selected-data requests pass in the v3 corpus. The remaining 12 cases in the table are future work.
 
 The first release treats a mind map (思维导图) as a rooted, ordered tree inside one canvas component. Users can create branches, edit ideas, reorganize subtrees, collapse branches, comment on nodes, and review agent changes. The canvas derives node positions and connectors from the committed tree. A user can select a node, branch, or several nodes and ask the agent to work with that selection as structured data. Cross-links between branches, arbitrary graph edges, and free positioning can be separate future journeys.
 
@@ -37,7 +37,9 @@ The committed tree is the source for both rendering and agent context. When the 
 
 `node` includes one node, `subtree` includes its descendants even when collapsed, and `multi` includes the explicitly selected nodes in tree order. Include ancestor breadcrumbs and relevant comments so the model can interpret each label. Deduplicate descendants when both a parent and its child are selected. Validate selected IDs and revision before preparing the request. Keep context within the existing request size limit; return an actionable size error instead of silently dropping selected nodes.
 
-The agent returns typed operations against stable node IDs, such as add child, rename, or move subtree. The server validates and stages the operations with a preview of affected nodes. The selection defines the permitted edit scope: a proposal touching other nodes or using stale IDs is rejected. Accepting a valid proposal applies all operations atomically at its base revision; rejecting it leaves the map unchanged. The request record retains the selection and exact context sent to the model so the edit can be audited and replayed.
+The target protocol has the agent return typed operations against stable node IDs, such as add child, rename, or move subtree. The server would validate and stage the operations with a preview of affected nodes. The selection defines the permitted edit scope: a proposal touching other nodes or using stale IDs is rejected. Accepting a valid proposal applies all operations atomically at its base revision; rejecting it leaves the map unchanged. The request record retains the selection and exact context sent to the model so the edit can be audited and replayed.
+
+The current implementation builds and records the structured selection context, then sends it **alongside the full canvas snapshot** through the existing proposal protocol. It checks the resulting full-snapshot proposal against the selected scope before staging or committing. Large maps can still hit the current 8 KB request limit; switching to typed, selection-only operations is the next protocol step.
 
 ## New customer journeys and eval cases
 
@@ -56,6 +58,8 @@ Each row is one journey with three independently runnable cases, following the v
 | P1 | Keep the map | `history/undo-redo`: undo and redo a restructure; `history/restart`: restart and replay; `history/export-restore`: restore an exported map in a fresh store | The exact tree, IDs, sibling order, revision history, and rendered hierarchy survive each path; no partial import changes the destination. |
 
 ## Eval development plan
+
+Current P0 run: `npm run eval:validate:inputs -- --corpus v3`, then `npm run eval:run -- --corpus v3`. The 15 P0 cases pass with model, selection-context, DOM-node, and SVG connector oracles. The steps below cover the remaining P1 cases and protocol improvement.
 
 1. **Write the v3 corpus first.** Use `eval/cases/v3/<journey>/<case>/` with the existing spec, fixture, actions, and independent expected model conventions. Add mind map action drivers for create, rename, add, duplicate, move, delete, select, request agent, review, collapse, keyboard, comment, and restore. The initial run should record red cases against the current product.
 2. **Assert structure independently.** Parse the committed snapshot and check one root, unique IDs, valid parent references, no cycles, sibling order, exact affected subtree, and unchanged unrelated nodes. Check revision count and events per operation. Expected trees must come from case fixtures, not from the product's layout or command implementation.

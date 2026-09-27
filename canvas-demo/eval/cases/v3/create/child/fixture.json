@@ -1,0 +1,17 @@
+{
+  "components": [
+    {
+      "id": "map-1",
+      "kind": "mind_map",
+      "rootId": "root",
+      "nodes": [
+        {
+          "id": "root",
+          "parentId": null,
+          "order": 0,
+          "label": "Launch plan"
+        }
+      ]
+    }
+  ]
+}

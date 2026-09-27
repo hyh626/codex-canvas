@@ -50,6 +50,8 @@ export function validateV2Inputs(root = corpusRoot) {
   if (manifest.format !== "canvas-render-eval-input-manifest-v2")
     errors.push("manifest.json: invalid format");
   if (!Array.isArray(manifest.cases)) return [...errors, "manifest.json: cases must be an array"];
+  const isV3 = manifest.cases.length === 15 && manifest.cases.every((id) => /^(create|text|branch|move|selection)\//.test(id));
+  if (isV3) return validateV3Inputs(root, manifest, validators);
   if (manifest.cases.length !== 24 || manifest.case_count !== 24)
     errors.push("manifest.json: expected exactly 24 new cases");
   if (manifest.examples_per_scenario !== 3)
@@ -126,10 +128,63 @@ export function validateV2Inputs(root = corpusRoot) {
   return errors;
 }
 
+function validateV3Inputs(root, manifest, validators) {
+  const errors = [];
+  const expectedGroups = ["create", "text", "branch", "move", "selection"];
+  if (manifest.case_count !== 15 || manifest.examples_per_scenario !== 3)
+    errors.push("v3 manifest must declare 15 cases and three examples per group");
+  for (const group of expectedGroups) {
+    const count = manifest.cases.filter((id) => id.startsWith(`${group}/`)).length;
+    if (count !== 3) errors.push(`v3 manifest: ${group} requires three cases, found ${count}`);
+  }
+  for (const caseId of manifest.cases) {
+    if (typeof caseId !== "string" || !/^[a-z0-9-]+\/[a-z0-9-]+$/.test(caseId)) {
+      errors.push(`manifest.json: invalid case ID ${String(caseId)}`);
+      continue;
+    }
+    const directory = path.join(root, caseId);
+    let spec, fixture, actions, expectations;
+    try {
+      spec = readJson(path.join(directory, "spec.json"));
+      fixture = readJson(path.join(directory, "fixture.json"));
+      actions = readJsonl(path.join(directory, "actions.jsonl"));
+      expectations = readJson(path.join(directory, "expectations.json"));
+    } catch (error) {
+      errors.push(`${caseId}: ${error.message}`);
+      continue;
+    }
+    if (spec.case_id !== caseId || expectations.case_id !== caseId || spec.scenario_id !== caseId.split("/")[0])
+      errors.push(`${caseId}: case IDs must agree across files`);
+    checkSchema(validators, "expectations.schema.json", expectations, `${caseId}/expectations.json`, errors);
+    checkSchema(validators, "model.schema.json", fixture, `${caseId}/fixture.json`, errors);
+    checkSchema(validators, "model.schema.json", expectations.initial_model, `${caseId}/initial_model`, errors);
+    if (!isDeepStrictEqual(fixture, expectations.initial_model)) errors.push(`${caseId}: fixture and initial model disagree`);
+    if (actions.length < 2 || actions[0]?.kind !== "seed_fixture") errors.push(`${caseId}: first action must seed the fixture`);
+    if (actions.length !== expectations.checkpoints?.length) errors.push(`${caseId}: each action requires one expectation checkpoint`);
+    const checkpoints = new Map(expectations.checkpoints?.map((entry) => [entry.checkpoint_id, entry]) ?? []);
+    for (const [index, action] of actions.entries()) {
+      checkSchema(validators, "action.schema.json", action, `${caseId}/action ${index + 1}`, errors);
+      if (action.step !== index + 1) errors.push(`${caseId}: action steps must be consecutive`);
+      const checkpoint = checkpoints.get(action.expectation_checkpoint_id);
+      if (!checkpoint || checkpoint.after_action_id !== action.action_id) errors.push(`${caseId}: action ${action.action_id} must match a checkpoint`);
+      if (checkpoint) checkSchema(validators, "model.schema.json", checkpoint.expected_model, `${caseId}/${checkpoint.checkpoint_id}/model`, errors);
+    }
+    if (!checkpoints.has(expectations.final_checkpoint_id)) errors.push(`${caseId}: final checkpoint is missing`);
+  }
+  return errors;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const errors = validateV2Inputs(process.argv[2] ? path.resolve(process.argv[2]) : corpusRoot);
+  const corpusArg = process.argv.indexOf("--corpus");
+  const namedCorpus = corpusArg >= 0 ? process.argv[corpusArg + 1] : null;
+  const rootArg = namedCorpus
+    ? path.join(here, "cases", namedCorpus)
+    : process.argv[2] && !process.argv[2].startsWith("-")
+      ? path.resolve(process.argv[2])
+      : corpusRoot;
+  const errors = validateV2Inputs(rootArg);
   if (errors.length) {
     console.error(errors.join("\n"));
     process.exitCode = 1;
-  } else console.log("valid v2 CUJ input corpus: 24 cases");
+  } else console.log(`valid CUJ input corpus: ${readJson(path.join(rootArg, "manifest.json")).cases.length} cases`);
 }
