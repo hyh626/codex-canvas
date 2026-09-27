@@ -1,0 +1,86 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "shared-undo/restart",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "3679c877-5a0f-441b-8592-c273ac4d0641",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "bd93e4d1-45a5-4575-86a2-942e1373e0c6",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "0ee1b77a-b41b-41b8-a6f0-d65caf7598d1",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "7210c131-5e49-4c5d-bcfd-b155a3ef02d5",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "c6d2b52a-cfaf-4b71-bae0-5b8f2de129b7",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "0e3d85ae-154b-4088-a37d-5b4fc2ffc7ea",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "event",
+      "actual_id": "81508776-c073-4494-83cf-57a0b0667cf8",
+      "alias": "event-000006",
+      "defined_at_seq": 6
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "52115ab3-23e5-4ab8-a153-9ca2de148325",
+      "alias": "command-0002",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-4",
+      "alias": "command-0003",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-5",
+      "alias": "command-0004",
+      "defined_at_seq": 6
+    }
+  ]
+}

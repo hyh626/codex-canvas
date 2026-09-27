@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "human-edit/stale-conflict",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 3,
+    "captures_ok": 7,
+    "captures_failed": 0,
+    "assertions": 13,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 4,
+    "revision": 2,
+    "model_hash": "c04f1b0365bc3c9cdb788f07f0ac4fb7a17635bfc77b345582e1a7df7e1c4998"
+  },
+  "timing_ms": {
+    "execute": 5039.448960999998,
+    "replay_render": 3156.344748000003,
+    "oracles": 2.174128999999084
+  },
+  "failures": []
+}

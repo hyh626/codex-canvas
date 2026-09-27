@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "audited-request/corrupt-reconstruction",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "8ef25bbc-2278-4d82-89b2-0a2f3427c186",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "93d8946f-765e-431a-b38d-a5e40113a9fd",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "f417c85b-4776-4247-b1ff-c13c3ac627ce",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "0ab3ac90-25a6-4945-a984-657800a43a69",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "ac6bb499-46e8-4674-9b41-4beac9820022",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "caa3630d-2bf5-447e-b09e-556ec9fe79fa",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "human-edit/unicode-escape",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 4,
+      "captured": 4,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 3,
+      "captured": 3,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 2,
+    "captures_ok": 7,
+    "captures_failed": 0,
+    "assertions": 10,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 4,
+    "revision": 2,
+    "model_hash": "cc42d6b7707b60852de1c6a0f8453d01022251cbbd8e919a88a8c677e2ab6435"
+  },
+  "timing_ms": {
+    "execute": 5795.107179000002,
+    "replay_render": 3190.8585749999984,
+    "oracles": 0.3139660000015283
+  },
+  "failures": []
+}

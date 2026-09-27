@@ -1,0 +1,124 @@
+- banner:
+  - link "◈ Canvas LAB / 001":
+    - /url: /
+    - text: ◈
+    - strong: Canvas
+    - text: LAB / 001
+  - text: ● Connected r3
+  - button "↶ Undo"
+  - button "↷ Redo" [disabled]
+  - link "Export trajectory ↗":
+    - /url: /api/export
+- main:
+  - complementary:
+    - text: WORKSPACE
+    - heading "A shared place to think." [level=1]
+    - paragraph: Edit a card. Ask the agent. Every change meets in one model.
+    - text: COMPONENTS 01
+    - navigation:
+      - button "◇ hero"
+    - text: Try the loop
+    - list:
+      - listitem: Double-click a card title to edit.
+      - listitem: Duplicate, reorder, or delete a card.
+      - listitem: Ask the mock agent to change its color.
+      - listitem: Undo, then inspect the event.
+      - listitem: "Reload: the model stays."
+    - paragraph: Local demo · single writer Cards and editable static HTML components.
+  - region "HTML node + layout edit":
+    - text: CUJ PLAYGROUND
+    - heading "HTML node + layout edit" [level=2]
+    - text: CUJ scenario
+    - combobox "CUJ scenario":
+      - option "Human edits the model"
+      - option "Comment → agent proposal"
+      - option "Human + agent share Undo"
+      - option "Component lifecycle"
+      - option "HTML node + layout edit" [selected]
+      - option "Audited model request"
+    - button "Load / restart"
+    - paragraph: Edit authoritative HTML through stable node IDs, then change its layout.
+    - list:
+      - listitem: ✓ Double-click the title and commit “A shared launch”.
+      - listitem: "✓ Run the mock agent with “layout: horizontal”."
+    - text: "Auto checks passed · 2/2 Expected: Text editing preserves surrounding HTML; the agent changes flex direction to row."
+  - text: LIVE CANVAS
+  - heading "Your model, made visible." [level=2]
+  - button "＋ HTML component"
+  - button "＋ New card"
+  - button "Duplicate"
+  - button "← Move earlier" [disabled]
+  - button "Move later →" [disabled]
+  - button "Delete" [disabled]
+  - text: Double-click a title or body to edit it.
+  - article "hero":
+    - iframe
+    - text: hero / HTML · double-click text to edit
+  - text: Agent
+  - combobox "Agent":
+    - option "Deterministic mock" [selected]
+    - option "DeepSeek Harness (experimental)" [disabled]
+    - option "Codex · requires provider setup" [disabled]
+  - text: assert = true · mock request Agent instruction
+  - textbox "Agent instruction":
+    - /placeholder: "Try: 标题：一起把想法变成作品"
+    - text: "layout: horizontal"
+  - button "Horizontal layout"
+  - button "Change color"
+  - button "Add card"
+  - checkbox "Capture full request"
+  - text: Capture full request
+  - button "Run agent ↗"
+  - paragraph: Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call.
+  - status: Agent proposal validated and committed. Try Undo.
+  - text: TRAJECTORY APPEND ONLY
+  - button "008 workspace.edit_committed agent":
+    - text: 008 workspace.edit_committed
+    - emphasis: agent
+  - button "007 model.response_received runtime":
+    - text: 007 model.response_received
+    - emphasis: runtime
+  - button "006 model.request_prepared runtime":
+    - text: 006 model.request_prepared
+    - emphasis: runtime
+  - button "005 user.message human":
+    - text: 005 user.message
+    - emphasis: human
+  - button "004 workspace.edit_committed human":
+    - text: 004 workspace.edit_committed
+    - emphasis: human
+  - button "003 workspace.edit_committed human":
+    - text: 003 workspace.edit_committed
+    - emphasis: human
+  - button "002 scenario.started human":
+    - text: 002 scenario.started
+    - emphasis: human
+  - button "001 session.started runtime":
+    - text: 001 session.started
+    - emphasis: runtime
+  - complementary:
+    - text: INSPECTOR
+    - heading "hero" [level=2]
+    - text: HTML source
+    - textbox "HTML source": <article data-node-id="root" style="display:flex;gap:16px;padding:24px;background:#eef2ff;border-radius:16px;display:flex;flex-direction:row;gap:24px"> <header data-node-id="heading"><small data-node-id="eyebrow">CUJ PLAYGROUND</small><h2 data-node-id="title">A shared launch</h2></header> <section data-node-id="content"><p data-node-id="body">Edit this node, then ask the agent to change the layout.</p><ul data-node-id="features"><li data-node-id="feature-one">Stable comment anchors</li><li data-node-id="feature-two">One shared history</li></ul></section> </article>
+    - button "Commit edit"
+    - paragraph: Edits become one undoable transaction. Typing stays local until committed.
+    - button "Reload latest component"
+    - separator
+    - text: Comment on this component
+    - combobox:
+      - option "root"
+      - option "heading"
+      - option "eyebrow"
+      - option "title" [selected]
+      - option "content"
+      - option "body"
+      - option "features"
+      - option "feature-one"
+      - option "feature-two"
+    - textbox "Comment on this component":
+      - /placeholder: Give feedback for the next agent turn
+    - button "Add comment"
+    - text: No comments on this component yet.
+    - group: "Data model { \"revision\": 3, \"components\": [ { \"html\": \"<article data-node-id=\\\"root\\\" style=\\\"display:flex;gap:16px;padding:24px;background:#eef2ff;border-radius:16px;display:flex;flex-direction:row;gap:24px\\\">\\n <header data-node-id=\\\"heading\\\"><small data-node-id=\\\"eyebrow\\\">CUJ PLAYGROUND</small><h2 data-node-id=\\\"title\\\">A shared launch</h2></header>\\n <section data-node-id=\\\"content\\\"><p data-node-id=\\\"body\\\">Edit this node, then ask the agent to change the layout.</p><ul data-node-id=\\\"features\\\"><li data-node-id=\\\"feature-one\\\">Stable comment anchors</li><li data-node-id=\\\"feature-two\\\">One shared history</li></ul></section>\\n</article>\", \"id\": \"hero\", \"kind\": \"html\" } ] }"
+    - group: Selected event

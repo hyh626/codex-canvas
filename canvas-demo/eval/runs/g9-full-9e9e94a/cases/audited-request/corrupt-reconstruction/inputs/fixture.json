@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "welcome",
+      "title": "Audit the request",
+      "body": "Enable capture, then run a deterministic proposal.",
+      "color": "#6366f1"
+    }
+  ]
+}

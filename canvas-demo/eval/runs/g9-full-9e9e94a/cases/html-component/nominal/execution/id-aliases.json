@@ -1,0 +1,92 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "html-component/nominal",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "21e42b6b-3966-4a67-9943-7785d47273cb",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "260ee1bc-71d1-4207-a0da-e49f790d456c",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "765f399d-d994-4a82-a3a1-b2ff38bf58a3",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "ff92790b-6cf6-4203-bf1d-968a98cdff0d",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "1bcac867-175e-4ab2-9cc3-4ec5d336f8c1",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "32bd2eb4-6407-4659-b35c-e82d2729d5d8",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "event",
+      "actual_id": "2a20192d-0549-4064-9162-ddfe9f1c40a5",
+      "alias": "event-000006",
+      "defined_at_seq": 6
+    },
+    {
+      "kind": "event",
+      "actual_id": "240abbe5-a68c-45b7-80cf-795ac8df2d88",
+      "alias": "event-000007",
+      "defined_at_seq": 7
+    },
+    {
+      "kind": "event",
+      "actual_id": "6973ec57-f3ae-4e22-927e-9650a2d0731a",
+      "alias": "event-000008",
+      "defined_at_seq": 8
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "b20b4034-c0dd-4a77-8c45-4042a18347f1",
+      "alias": "command-0002",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "command",
+      "actual_id": "3a9ecff3-286f-4efa-afd7-43e89db3119a",
+      "alias": "command-0003",
+      "defined_at_seq": 8
+    }
+  ]
+}

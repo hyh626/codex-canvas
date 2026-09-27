@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "html-component/nominal",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 8,
+      "captured": 8,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 3,
+    "captures_ok": 13,
+    "captures_failed": 0,
+    "assertions": 15,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 8,
+    "revision": 3,
+    "model_hash": "04620107e0f7ad3ae1fef8ecb37899a01d042d5e4d0405de5f5e4d182a194978"
+  },
+  "timing_ms": {
+    "execute": 7459.105188999994,
+    "replay_render": 7026.943352999981,
+    "oracles": 0.26593200000934303
+  },
+  "failures": []
+}

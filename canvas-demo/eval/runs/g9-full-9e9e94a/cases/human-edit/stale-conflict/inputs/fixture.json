@@ -1,0 +1,10 @@
+{
+  "components": [
+    {
+      "id": "welcome",
+      "title": "Build something together.",
+      "body": "Double-click this title to begin.",
+      "color": "#6366f1"
+    }
+  ]
+}

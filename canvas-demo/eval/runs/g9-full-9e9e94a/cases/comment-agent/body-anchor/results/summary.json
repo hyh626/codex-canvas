@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "comment-agent/body-anchor",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 8,
+      "captured": 8,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 5,
+      "captured": 5,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 4,
+    "captures_ok": 13,
+    "captures_failed": 0,
+    "assertions": 18,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 8,
+    "revision": 2,
+    "model_hash": "24aad3c982ee9dd97217a9a164fbb27e0e30b9351033d8681b7aea73925c0490"
+  },
+  "timing_ms": {
+    "execute": 7265.570542000009,
+    "replay_render": 7057.146655000004,
+    "oracles": 0.2756900000022142
+  },
+  "failures": []
+}

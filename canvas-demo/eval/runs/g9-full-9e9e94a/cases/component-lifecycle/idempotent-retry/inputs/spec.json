@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "case_id": "component-lifecycle/idempotent-retry",
+  "scenario_id": "component-lifecycle",
+  "example_id": "idempotent-retry",
+  "title": "Apply a retried command only once",
+  "seed": 1403,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "alpha",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": null,
+  "tags": [
+    "p0",
+    "lifecycle",
+    "idempotency"
+  ]
+}

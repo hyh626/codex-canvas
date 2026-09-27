@@ -1,0 +1,106 @@
+- banner:
+  - link "◈ Canvas LAB / 001":
+    - /url: /
+    - text: ◈
+    - strong: Canvas
+    - text: LAB / 001
+  - text: ● Connected r0
+  - button "↶ Undo" [disabled]
+  - button "↷ Redo" [disabled]
+  - link "Export trajectory ↗":
+    - /url: /api/export
+- main:
+  - complementary:
+    - text: WORKSPACE
+    - heading "A shared place to think." [level=1]
+    - paragraph: Edit a card. Ask the agent. Every change meets in one model.
+    - text: COMPONENTS 01
+    - navigation:
+      - button "◇ welcome"
+    - text: Try the loop
+    - list:
+      - listitem: Double-click a card title to edit.
+      - listitem: Duplicate, reorder, or delete a card.
+      - listitem: Ask the mock agent to change its color.
+      - listitem: Undo, then inspect the event.
+      - listitem: "Reload: the model stays."
+    - paragraph: Local demo · single writer Cards and editable static HTML components.
+  - region "Human + agent share Undo":
+    - text: CUJ PLAYGROUND
+    - heading "Human + agent share Undo" [level=2]
+    - text: CUJ scenario
+    - combobox "CUJ scenario":
+      - option "Human edits the model"
+      - option "Comment → agent proposal"
+      - option "Human + agent share Undo" [selected]
+      - option "Component lifecycle"
+      - option "HTML node + layout edit"
+      - option "Audited model request"
+    - button "Load / restart"
+    - paragraph: Prove that manual and agent edits are transactions in one history.
+    - list:
+      - listitem: ○ Commit the title “Human version” manually.
+      - listitem: ○ Run the mock agent with “标题：Agent version”.
+      - listitem: ○ Press Undo twice; the title should return to Baseline.
+    - text: "In progress · 0/3 Expected: Two undo operations return to Baseline without rewriting prior events."
+  - text: LIVE CANVAS
+  - heading "Your model, made visible." [level=2]
+  - button "＋ HTML component"
+  - button "＋ New card"
+  - button "Duplicate"
+  - button "← Move earlier" [disabled]
+  - button "Move later →" [disabled]
+  - button "Delete" [disabled]
+  - text: Double-click a title or body to edit it.
+  - article "welcome":
+    - heading "Build something together." [level=3]
+    - paragraph: One canvas. Human and agent, working on the same model.
+    - text: WELCOME / SHARED COMPONENT
+    - button "Edit text"
+  - text: Agent
+  - combobox "Agent":
+    - option "Deterministic mock" [selected]
+    - option "DeepSeek Harness (experimental)" [disabled]
+    - option "Codex · requires provider setup" [disabled]
+  - text: assert = true · mock request Agent instruction
+  - textbox "Agent instruction":
+    - /placeholder: "Try: 标题：一起把想法变成作品"
+    - text: 标题：Agent version
+  - button "Horizontal layout"
+  - button "Change color"
+  - button "Add card"
+  - checkbox "Capture full request"
+  - text: Capture full request
+  - button "Run agent ↗"
+  - paragraph: Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call.
+  - status: Agent proposal validated and committed. Try Undo.
+  - text: TRAJECTORY APPEND ONLY
+  - button "002 scenario.started human":
+    - text: 002 scenario.started
+    - emphasis: human
+  - button "001 session.started runtime":
+    - text: 001 session.started
+    - emphasis: runtime
+  - complementary:
+    - text: INSPECTOR
+    - heading "welcome" [level=2]
+    - text: Title
+    - textbox "Title": Build something together.
+    - text: Body
+    - textbox "Body": One canvas. Human and agent, working on the same model.
+    - text: Accent
+    - textbox "Accent": "#6366f1"
+    - button "Commit edit"
+    - paragraph: Edits become one undoable transaction. Typing stays local until committed.
+    - button "Reload latest component"
+    - separator
+    - text: Comment on this component
+    - combobox:
+      - option "title" [selected]
+      - option "body"
+    - textbox "Comment on this component":
+      - /placeholder: Give feedback for the next agent turn
+    - button "Add comment"
+    - text: No comments on this component yet.
+    - group: "Data model { \"revision\": 0, \"components\": [ { \"body\": \"One canvas. Human and agent, working on the same model.\", \"color\": \"#6366f1\", \"id\": \"welcome\", \"title\": \"Build something together.\" } ] }"
+    - group: Selected event

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "selected_component_id": "welcome",
+  "selected_scenario_id": "human-edit",
+  "open_panel": "model",
+  "focus": "button",
+  "scroll": {
+    "app_x": 0,
+    "app_y": 0,
+    "canvas_x": 0,
+    "canvas_y": 0
+  },
+  "dirty": false,
+  "running": false,
+  "connection": "connected",
+  "dialogs": [
+    {
+      "id": "inlineEdit",
+      "open": true
+    }
+  ],
+  "editor": {
+    "mode": "inline_text",
+    "draft": {
+      "component_id": "welcome",
+      "node_id": "title",
+      "base_revision": 1,
+      "value": "Draft from A"
+    },
+    "error": "Revision conflict. Your draft is preserved; reload the latest component before retrying.",
+    "rebase_available": true
+  },
+  "status": {
+    "text": "Ready. Edit the selected component or try an agent instruction.",
+    "tone": "error"
+  },
+  "controls": {
+    "undo_enabled": true,
+    "redo_enabled": false,
+    "run_enabled": true
+  }
+}
