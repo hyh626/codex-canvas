@@ -1,0 +1,9 @@
+{
+  "components": [
+    {
+      "id": "card-a",
+      "kind": "html",
+      "html": "<article data-node-id=\"root\"><h2 data-node-id=\"title\">Launch plan</h2><p data-node-id=\"body\">Keep the launch focused.</p></article>"
+    }
+  ]
+}

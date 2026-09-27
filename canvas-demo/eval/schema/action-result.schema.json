@@ -161,6 +161,7 @@
       "required": ["sha256", "size_bytes", "media_type"],
       "properties": {
         "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "path": { "type": "string", "minLength": 1 },
         "size_bytes": { "type": "integer", "minimum": 0 },
         "media_type": { "type": "string", "minLength": 1 }
       }

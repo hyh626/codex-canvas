@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "case_id": "accessibility/keyboard-loop",
+  "scenario_id": "accessibility",
+  "example_id": "keyboard-loop",
+  "title": "Complete edit and undo loop by keyboard",
+  "seed": 2613,
+  "fixture": "fixture.json",
+  "expectations": "expectations.json",
+  "actions": "actions.jsonl",
+  "viewport": {
+    "width": 1280,
+    "height": 900,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "card-a",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "fault_profile": null,
+  "tags": [
+    "p1",
+    "v2",
+    "accessibility"
+  ]
+}

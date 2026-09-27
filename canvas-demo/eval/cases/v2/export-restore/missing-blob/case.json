@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-case-v1",
+  "case_id": "export-restore/missing-blob",
+  "scenario_id": "export-restore",
+  "example_id": "missing-blob",
+  "title": "Reject archive with missing blob",
+  "seed": 2608,
+  "generation": {
+    "mode": "execute_actions",
+    "parameterized_scenario": true
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "card-a",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    },
+    "selected_scenario_id": "human-edit"
+  },
+  "paths": {
+    "expectations": "expectations.json",
+    "actions": "actions.jsonl",
+    "action_results": "execution/action-results.jsonl",
+    "events": "trajectory/events.jsonl",
+    "trajectory_blobs": "trajectory/blobs/sha256",
+    "id_aliases": "execution/id-aliases.json",
+    "captures": "observations/captures.jsonl",
+    "artifacts": "artifacts/sha256",
+    "assertions": "results/assertions.jsonl",
+    "summary": "results/summary.json"
+  },
+  "oracles": {
+    "structural": true,
+    "visual_regression": {
+      "enabled": false,
+      "baseline_manifest": null
+    },
+    "visual_quality": {
+      "enabled": true,
+      "rubric_version": "v1",
+      "blocking": false
+    }
+  },
+  "reproducibility": {
+    "semantic_fingerprint": "81117f409a40c371434f8254b00c648dbfcf274c22b3ff05433e0cdb45b445ec",
+    "generated_id_strategy": "deterministic-provider",
+    "volatile_event_fields": [
+      "/event_id",
+      "/session_id",
+      "/timestamp"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "components": [
+    {
+      "id": "card-a",
+      "title": "Launch plan",
+      "body": "Keep the launch focused.",
+      "color": "#6366f1"
+    },
+    {
+      "id": "card-b",
+      "title": "Research notes",
+      "body": "Interview five customers.",
+      "color": "#14b8a6"
+    },
+    {
+      "id": "html-a",
+      "kind": "html",
+      "html": "<section data-node-id=\"root\"><h2 data-node-id=\"heading\">Existing evidence</h2></section>"
+    }
+  ]
+}

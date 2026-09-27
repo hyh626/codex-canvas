@@ -30,6 +30,8 @@ The browser now exposes six repeatable product scenarios: human node editing, co
 
 The proposed model-to-render evaluation bundle is specified in [eval/FORMAT.zh-CN.md](eval/FORMAT.zh-CN.md). It combines per-event replay outcomes with real UI checkpoints, independent expected models, iframe evidence, content-addressed screenshots and reviewable assertions. Render failures remain valid evidence and fail the case instead of making the bundle unwritable.
 
+The [v2 CUJ TDD corpus](eval/V2-CUJ-TDD.md) adds 24 cases for proposal review, concurrent edits, failure handling, coordinated changes, comments, restore, reconnect, and accessibility. Validate inputs with `npm run eval:validate:inputs`, then run `npm run eval:run -- --corpus v2`.
+
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot

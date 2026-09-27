@@ -77,6 +77,7 @@ export function validateRun(runDirectory) {
     errors.push(...validateEvalSemantics({ action_results: actionResults, captures, events }).map((error) => `${entry.case_id}/${error.code}: ${error.message}`));
     verifyReferences(references(events), path.join(caseDirectory, caseConfig.paths.trajectory_blobs), `${entry.case_id}/trajectory`, errors);
     verifyReferences(references(captures), path.join(caseDirectory, caseConfig.paths.artifacts), `${entry.case_id}/artifacts`, errors);
+    verifyReferences(references(actionResults), path.join(caseDirectory, caseConfig.paths.artifacts), `${entry.case_id}/action-results`, errors);
     if (entry.status !== summary.status) errors.push(`${entry.case_id}: index status does not match summary`);
   }
   return errors;

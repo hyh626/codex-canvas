@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "id": "card-a",
+      "title": "Launch plan",
+      "body": "Keep the launch focused.",
+      "color": "#6366f1"
+    },
+    {
+      "id": "card-b",
+      "title": "Research notes",
+      "body": "Interview five customers.",
+      "color": "#14b8a6"
+    },
+    {
+      "id": "card-c",
+      "title": "Capacity card 2",
+      "body": "Preserved body 2.",
+      "color": "#64748b"
+    },
+    {
+      "id": "card-d",
+      "title": "Capacity card 3",
+      "body": "Preserved body 3.",
+      "color": "#64748b"
+    },
+    {
+      "id": "card-e",
+      "title": "Capacity card 4",
+      "body": "Preserved body 4.",
+      "color": "#64748b"
+    },
+    {
+      "id": "card-f",
+      "title": "Capacity card 5",
+      "body": "Preserved body 5.",
+      "color": "#64748b"
+    },
+    {
+      "id": "card-g",
+      "title": "Capacity card 6",
+      "body": "Preserved body 6.",
+      "color": "#64748b"
+    },
+    {
+      "id": "card-h",
+      "title": "Capacity card 7",
+      "body": "Preserved body 7.",
+      "color": "#64748b"
+    }
+  ]
+}

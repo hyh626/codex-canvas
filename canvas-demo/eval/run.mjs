@@ -8,14 +8,18 @@ import { chromium } from "@playwright/test";
 import containerChromium from "@sparticuz/chromium";
 
 import { createApp } from "../server.mjs";
+import { scenarioById } from "../scenarios.mjs";
 import { stable, hash } from "../store.mjs";
 import { validateEvalSemantics } from "./validate-semantics.mjs";
+import { validateV2Inputs } from "./validate-v2-inputs.mjs";
 import { ArtifactStore, capturePage, partialEqual, writeJson, writeJsonl } from "./runner/artifacts.mjs";
+import { executeV2P0Action } from "./runner/v2-p0-actions.mjs";
+import { executeV2P1Action } from "./runner/v2-p1-actions.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(here, "..");
 const repoRoot = path.resolve(appRoot, "..");
-const inputRoot = path.join(here, "cases", "v1");
+const defaultInputRoot = path.join(here, "cases", "v1");
 const defaultRunsRoot = path.join(here, "runs");
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
@@ -29,6 +33,32 @@ function orderedSubsequence(actual, expected) {
   let cursor = 0;
   for (const value of actual) if (value === expected[cursor]) cursor += 1;
   return cursor === expected.length;
+}
+
+function atPointer(value, pointer) {
+  const segments = pointer === "" ? [] : pointer.slice(1).split("/").map((part) => part.replaceAll("~1", "/").replaceAll("~0", "~"));
+  let current = value;
+  for (const segment of segments) {
+    if (current === null || typeof current !== "object" || !Object.hasOwn(current, segment))
+      return { exists: false, value: undefined };
+    current = current[segment];
+  }
+  return { exists: true, value: current };
+}
+
+function modelInvariantResult(invariant, actualModel, references) {
+  if (invariant.scope !== "model") return { supported: false, pass: false, actual: null };
+  const actual = atPointer(actualModel, invariant.path);
+  if (invariant.operator === "exists") return { supported: true, pass: actual.exists, actual: actual.exists };
+  if (invariant.operator === "absent") return { supported: true, pass: !actual.exists, actual: actual.exists };
+  if (invariant.operator === "equals") return { supported: true, pass: actual.exists && stable(actual.value) === stable(invariant.value), actual: actual.value ?? null };
+  if (invariant.operator === "count-equals") return { supported: true, pass: actual.exists && Array.isArray(actual.value) && actual.value.length === invariant.value, actual: Array.isArray(actual.value) ? actual.value.length : null };
+  if (invariant.operator === "contains") return { supported: true, pass: actual.exists && (typeof actual.value === "string" ? actual.value.includes(invariant.value) : Array.isArray(actual.value) && actual.value.some((item) => stable(item) === stable(invariant.value))), actual: actual.value ?? null };
+  if (invariant.operator === "unchanged") {
+    const reference = atPointer(references[invariant.compare_to], invariant.path);
+    return { supported: true, pass: actual.exists === reference.exists && stable(actual.value) === stable(reference.value), actual: actual.value ?? null };
+  }
+  return { supported: false, pass: false, actual: null };
 }
 
 function normalizeModel(model, aliases) {
@@ -73,6 +103,7 @@ function makeControl() {
   const hooks = {
     beforeAgentRequest() {
       if (control.fault === "request-fragment-corruption") throw Error("Request reconstruction failed: injected fragment corruption");
+      if (control.fault === "timeout") throw Error("Agent request timed out (injected eval timeout)");
     },
     transformProposal({ proposal }) {
       if (control.fault === "invalid-proposal") return { components: [] };
@@ -118,15 +149,16 @@ async function loadPage(context, url, consoleMessages) {
   return page;
 }
 
-async function runCase({ browser, caseId, runRoot }) {
-  const [scenarioId, exampleId] = caseId.split("/");
-  const sourceDir = path.join(inputRoot, scenarioId, exampleId);
+async function runCase({ browser, caseId, runRoot, inputRoot }) {
+  const [corpusScenarioId, exampleId] = caseId.split("/");
+  const sourceDir = path.join(inputRoot, corpusScenarioId, exampleId);
+  const scenarioId = scenarioById.has(corpusScenarioId) ? corpusScenarioId : "human-edit";
   const spec = readJson(path.join(sourceDir, "spec.json"));
   const caseConfig = readJson(path.join(sourceDir, "case.json"));
   const expectations = readJson(path.join(sourceDir, "expectations.json"));
   const actions = readJsonl(path.join(sourceDir, "actions.jsonl"));
-  const caseDir = path.join(runRoot, "cases", scenarioId, exampleId);
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), `canvas-eval-${scenarioId}-${exampleId}-`));
+  const caseDir = path.join(runRoot, "cases", corpusScenarioId, exampleId);
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), `canvas-eval-${corpusScenarioId}-${exampleId}-`));
   const artifacts = new ArtifactStore(path.join(caseDir, "artifacts", "sha256"));
   const captures = [];
   const captureStates = new Map();
@@ -136,6 +168,7 @@ async function runCase({ browser, caseId, runRoot }) {
   const aliases = new Map(expectations.initial_model.components.map((component) => [component.id, component.id]));
   const reverseAliases = new Map(expectations.initial_model.components.map((component) => [component.id, component.id]));
   const retriedCommands = new Map();
+  const v2ActionContext = new Map();
   const { control, hooks } = makeControl();
   let app;
   let baseUrl;
@@ -168,6 +201,14 @@ async function runCase({ browser, caseId, runRoot }) {
     const body = await response.json();
     return { ok: response.ok, status: response.status, body };
   };
+  const request = async (method, pathname, payload) => {
+    const response = await fetch(`${baseUrl}${pathname}`, {
+      method,
+      headers: { "Content-Type": "application/json", "X-Canvas-Token": token },
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+    });
+    return { ok: response.ok, status: response.status, body: await response.json() };
+  };
   const liveCapture = async (actionItem, phase) => {
     const captureId = `${caseId}@${actionItem.action_id}-${phase}`;
     const result = await capturePage({ page, artifacts, caseId, captureId, mode: "live_checkpoint", trigger: { action: { action_id: actionItem.action_id, phase } }, eventsThroughSeq: eventTail, consoleMessages });
@@ -187,6 +228,7 @@ async function runCase({ browser, caseId, runRoot }) {
       const checkpoint = checkpointByAction.get(actionItem.action_id);
       const started = performance.now();
       const beforeEvents = app.store.events.length;
+      const beforeState = structuredClone(app.store.state);
       const captureIds = [];
       let outcome = { ok: true, status: 200, body: null };
       let gate = null;
@@ -209,7 +251,16 @@ async function runCase({ browser, caseId, runRoot }) {
 
       for (const point of actionItem.live_capture_points.filter((point) => point.phase === "before")) captureIds.push((await liveCapture(actionItem, point.phase)).capture_id);
 
-      if (actionItem.kind === "agent_proposal") {
+      if (actionItem.kind === "seed_fixture") {
+        const fixture = readJson(path.join(sourceDir, "fixture.json"));
+        try {
+          app.store.commit({ state: fixture, baseRevision: app.store.revision, commandId: `eval-seed-${caseId.replaceAll("/", "-")}`, actor: "eval", intent: "seed_fixture" });
+          await renderCurrent();
+          outcome = { ok: true, status: 200, body: {} };
+        } catch (error) {
+          outcome = { ok: false, status: error.status ?? 400, body: { error: error.message } };
+        }
+      } else if (actionItem.kind === "agent_proposal") {
         const during = actionItem.live_capture_points.find((point) => point.phase === "during");
         if (during) {
           const armed = armGate();
@@ -220,12 +271,22 @@ async function runCase({ browser, caseId, runRoot }) {
         if (gate) {
           await control.gate.paused;
           gate.observations.push({ ordinal: 2, phase: "gate_paused" });
+          if (actionItem.input.human_edit_while_paused) {
+            const edit = actionItem.input.human_edit_while_paused;
+            const componentId = actualComponentId(edit.component_id);
+            const component = app.store.state.components.find((item) => item.id === componentId);
+            const field = edit.node_id === "title" ? "title" : edit.node_id === "body" ? "body" : null;
+            if (component && field) {
+              const humanOutcome = await post("component", { operation: "set_text", componentId, nodeId: edit.node_id, text: edit.value, baseRevision: app.store.revision, commandId: `eval-human-during-${actionItem.step}` });
+              if (humanOutcome.ok) await page.evaluate(({ body, scenarioId }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId }), { body: humanOutcome.body, scenarioId });
+            }
+          }
           const captureId = `${caseId}@${actionItem.action_id}-during`;
-          gate.observations.push({ ordinal: 3, phase: "capture_started", capture_id: captureId });
+          gate.observations.push({ ordinal: gate.observations.length + 1, phase: "capture_started", capture_id: captureId });
           captureIds.push((await liveCapture(actionItem, "during")).capture_id);
-          gate.observations.push({ ordinal: 4, phase: "capture_finished", capture_id: captureId });
+          gate.observations.push({ ordinal: gate.observations.length + 1, phase: "capture_finished", capture_id: captureId });
           control.gate.release();
-          gate.observations.push({ ordinal: 5, phase: "gate_released" });
+          gate.observations.push({ ordinal: gate.observations.length + 1, phase: "gate_released" });
         }
         await page.waitForFunction(() => !document.getElementById("run").disabled, null, { timeout: 10000 });
         const observed = await page.evaluate(() => globalThis.__canvasEval.observedUIState());
@@ -242,7 +303,7 @@ async function runCase({ browser, caseId, runRoot }) {
           if (checkpoint.expected_action_status === "succeeded") await page.waitForFunction(() => !document.getElementById("inlineEdit").open);
           else await page.waitForFunction(() => Boolean(document.getElementById("inlineError").textContent));
           const observed = await page.evaluate(() => globalThis.__canvasEval.observedUIState());
-          outcome = { ok: checkpoint.expected_action_status === "succeeded" && !observed.editor.error, status: observed.editor.error ? 409 : 200, body: observed.editor.error ? { error: observed.editor.error } : {} };
+          outcome = { ok: !observed.editor.error, status: observed.editor.error ? 409 : 200, body: observed.editor.error ? { error: observed.editor.error } : {} };
         }
       } else if (actionItem.kind === "comment") {
         outcome = await post("comment", { componentId: selectedActual, nodeId: actionItem.input.node_id, text: actionItem.input.text, baseRevision: app.store.revision, commandId: `eval-${actionItem.step}` });
@@ -288,12 +349,33 @@ async function runCase({ browser, caseId, runRoot }) {
         next.components.find((component) => component.id === selectedActual).html = actionItem.input.html;
         outcome = await post("edit", { state: next, baseRevision: app.store.revision, commandId: `eval-${actionItem.step}` });
         if (!outcome.ok) await page.evaluate((message) => globalThis.__canvasEval.showError(message), outcome.body.error);
-      } else throw Error(`Unsupported eval action kind: ${actionItem.kind}`);
+      } else if (["proposal_stage", "proposal_decision", "human_edit_commit"].includes(actionItem.kind)) {
+        try {
+          outcome = await executeV2P0Action({ actionItem, post, page, app, selectedActual, actualComponentId, scenarioId, renderCurrent, context: v2ActionContext });
+        } catch (error) {
+          outcome = { ok: false, status: 500, body: { error: error.message } };
+        }
+      } else if (["coordinated_change", "comment_lifecycle", "export_restore", "reconnect", "keyboard_interaction"].includes(actionItem.kind)) {
+        try {
+          outcome = await executeV2P1Action({ action: actionItem, context: {
+            page, app, request, renderCurrent,
+            renderSnapshot: async (body, options = {}) => page.evaluate(({ body, scenarioId, options }) => globalThis.__canvasEval.renderSnapshot(body, { scenarioId, ...options }), { body, scenarioId, options }),
+            selectedComponentId: selectedActual,
+          } });
+        } catch (error) {
+          outcome = { ok: false, status: 500, body: { error: error.message } };
+        }
+      } else {
+        outcome = { ok: false, status: 501, body: { error: `Runner does not implement action kind: ${actionItem.kind}` }, unsupported: true };
+      }
 
       control.gate = null;
       control.fault = null;
-      const expectedSuccess = checkpoint.expected_action_status === "succeeded";
-      const actualStatus = outcome.ok ? "succeeded" : checkpoint.expected_action_status;
+      const actualStatus = outcome.ok
+        ? "succeeded"
+        : outcome.status >= 400 && outcome.status < 500 && !["agent_proposal", "set_html_source"].includes(actionItem.kind) && !outcome.unsupported
+          ? "rejected"
+          : "failed";
       const afterEvents = app.store.events.slice(beforeEvents);
       reconcileComponentAliases(app.store.state, checkpoint.expected_model, aliases, reverseAliases);
 
@@ -312,14 +394,39 @@ async function runCase({ browser, caseId, runRoot }) {
         duration_ms: performance.now() - started,
       };
       if (!outcome.ok) actionResult.error = { name: "ActionError", message: outcome.body?.error ?? outcome.body?.text ?? "Action failed" };
+      if (outcome.evidence) actionResult.response = artifacts.put(outcome.evidence);
       if (gate) actionResult.gate = gate;
       actionResults.push(actionResult);
 
       const normalized = normalizeModel(app.store.state, aliases);
-      addAssertion({ id: `${actionItem.action_id}-status`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "action status", pass: (outcome.ok === expectedSuccess), actual: outcome.ok ? "succeeded" : actualStatus, expected: checkpoint.expected_action_status, message: outcome.ok === expectedSuccess ? undefined : `HTTP ${outcome.status}: ${outcome.body?.error ?? "unexpected status"}` });
+      const statusMatches = actualStatus === checkpoint.expected_action_status && !outcome.unsupported;
+      addAssertion({ id: `${actionItem.action_id}-status`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "action status", pass: statusMatches, actual: actualStatus, expected: checkpoint.expected_action_status, message: statusMatches ? undefined : `HTTP ${outcome.status}: ${outcome.body?.error ?? "unexpected status"}` });
       addAssertion({ id: `${actionItem.action_id}-model`, subject: { action_id: actionItem.action_id }, oracle: "model", name: "expected model", pass: stable(normalized) === stable(checkpoint.expected_model), actual: normalized, expected: checkpoint.expected_model });
       const emittedTypes = afterEvents.map((event) => event.type);
-      addAssertion({ id: `${actionItem.action_id}-events`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "expected event sequence", pass: orderedSubsequence(emittedTypes, checkpoint.expected_events.sequence), actual: emittedTypes, expected: checkpoint.expected_events.sequence });
+      const listedCommitCount = checkpoint.expected_events.sequence.filter((type) => type === "workspace.edit_committed").length;
+      const expectedCommitCount = ["load_scenario", "seed_fixture"].includes(actionItem.kind)
+        ? Math.max(1, listedCommitCount)
+        : listedCommitCount;
+      const actualCommitCount = emittedTypes.filter((type) => type === "workspace.edit_committed").length;
+      const eventsMatch = orderedSubsequence(emittedTypes, checkpoint.expected_events.sequence) &&
+        (checkpoint.expected_events.allow_additional || stable(emittedTypes) === stable(checkpoint.expected_events.sequence)) &&
+        actualCommitCount === expectedCommitCount;
+      addAssertion({ id: `${actionItem.action_id}-events`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "expected event sequence and edit commit count", pass: eventsMatch, actual: emittedTypes, expected: checkpoint.expected_events.sequence });
+      if (actionItem.kind === "export_restore") {
+        const restoreExpected = actionItem.input.operation === "roundtrip";
+        const integrity = restoreExpected ? outcome.evidence?.destination_restored : outcome.evidence?.destination_unchanged;
+        addAssertion({ id: `${actionItem.action_id}-destination`, subject: { action_id: actionItem.action_id }, oracle: "model", name: restoreExpected ? "destination restored exactly" : "destination unchanged after failed import", pass: integrity === true, actual: integrity ?? null, expected: true });
+        const expectedHttp = restoreExpected ? 200 : actionItem.input.fault === "missing_blob" ? 422 : 500;
+        addAssertion({ id: `${actionItem.action_id}-import-http`, subject: { action_id: actionItem.action_id }, oracle: "trajectory", name: "import contract status", pass: outcome.status === expectedHttp, actual: outcome.status, expected: expectedHttp });
+      }
+      for (const [invariantIndex, invariant] of checkpoint.invariants.entries()) {
+        const result = modelInvariantResult(invariant, normalized, {
+          model_pre_action: normalizeModel(beforeState, aliases),
+          previous_model_checkpoint: expectations.checkpoints[Math.max(0, actionItem.step - 2)]?.expected_model,
+          initial_model: expectations.initial_model,
+        });
+        addAssertion({ id: `${actionItem.action_id}-invariant-${invariantIndex + 1}`, subject: { action_id: actionItem.action_id }, oracle: "model", name: `invariant ${invariant.scope}:${invariant.operator} ${invariant.path}`, pass: result.pass, actual: result.actual, expected: invariant.value ?? invariant.compare_to ?? true, message: result.supported ? undefined : "Invariant operator is not implemented by the eval runner" });
+      }
       for (const liveExpected of checkpoint.live_checkpoints) {
         const id = `${caseId}@${actionItem.action_id}-${liveExpected.phase}`;
         const actualUI = captureStates.get(id);
@@ -353,7 +460,10 @@ async function runCase({ browser, caseId, runRoot }) {
     oracleMs = performance.now() - oracleStarted;
 
     fs.mkdirSync(path.join(caseDir, "inputs"), { recursive: true });
-    fs.copyFileSync(path.join(sourceDir, "case.json"), path.join(caseDir, "case.json"));
+    const outputCaseConfig = structuredClone(caseConfig);
+    outputCaseConfig.paths.expectations = "inputs/expectations.json";
+    outputCaseConfig.paths.actions = "inputs/actions.jsonl";
+    writeJson(path.join(caseDir, "case.json"), outputCaseConfig);
     for (const file of ["actions.jsonl", "expectations.json", "fixture.json", "spec.json"]) fs.copyFileSync(path.join(sourceDir, file), path.join(caseDir, "inputs", file));
     fs.mkdirSync(path.join(caseDir, "trajectory", "blobs", "sha256"), { recursive: true });
     fs.copyFileSync(path.join(dataDir, "events.jsonl"), path.join(caseDir, "trajectory", "events.jsonl"));
@@ -415,14 +525,22 @@ export function rebuildReport(runDirectory) {
   fs.writeFileSync(path.join(runDirectory, "report.html"), reportHtml(run, results));
 }
 
-export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId() } = {}) {
+export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(), corpus = defaultInputRoot } = {}) {
+  const inputRoot = path.resolve(corpus);
   const manifest = readJson(path.join(inputRoot, "manifest.json"));
+  if (manifest.format === "canvas-render-eval-input-manifest-v2") {
+    const errors = validateV2Inputs(inputRoot);
+    if (errors.length) throw Error(`Invalid v2 CUJ inputs:\n${errors.join("\n")}`);
+  }
   const selected = caseIds?.length ? caseIds : manifest.cases;
   const output = path.join(runsRoot, id);
   fs.mkdirSync(output, { recursive: true });
   let executablePath;
   let chromiumArgs = [];
-  if (process.platform === "linux") {
+  if (process.env.CANVAS_EVAL_BROWSER_EXECUTABLE) {
+    executablePath = process.env.CANVAS_EVAL_BROWSER_EXECUTABLE;
+    if (!fs.existsSync(executablePath)) throw Error(`Eval browser does not exist: ${executablePath}`);
+  } else if (process.platform === "linux") {
     const originalGetuid = process.getuid;
     try {
       if (originalGetuid) process.getuid = () => -1;
@@ -454,7 +572,7 @@ export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(
     const caseId = selected[index];
     if (index > 0) browser = await launchBrowser();
     try {
-      const result = await runCase({ browser, caseId, runRoot: output });
+      const result = await runCase({ browser, caseId, runRoot: output, inputRoot });
       results.push(result);
       console.log(`${result.summary.status.toUpperCase()} ${caseId} (${result.captureCount} captures)`);
     } finally {
@@ -469,12 +587,18 @@ export async function runEval({ caseIds, runsRoot = defaultRunsRoot, id = runId(
 function parseArguments(argv) {
   const cases = [];
   let id;
+  let corpus = defaultInputRoot;
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === "--case") cases.push(argv[++index]);
     else if (argv[index] === "--run-id") id = argv[++index];
+    else if (argv[index] === "--corpus") {
+      const value = argv[++index];
+      if (!value) throw Error("--corpus requires a path or version (v1, v2)");
+      corpus = value === "v1" || value === "v2" ? path.join(here, "cases", value) : value;
+    }
     else throw Error(`Unknown argument: ${argv[index]}`);
   }
-  return { caseIds: cases.length ? cases : undefined, id };
+  return { caseIds: cases.length ? cases : undefined, id, corpus };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

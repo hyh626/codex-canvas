@@ -1,0 +1,31 @@
+{
+  "format": "canvas-render-eval-input-manifest-v2",
+  "case_count": 24,
+  "examples_per_scenario": 3,
+  "cases": [
+    "proposal-review/accept",
+    "proposal-review/reject",
+    "proposal-review/stale-accept",
+    "agent-concurrent-edit/same-node",
+    "agent-concurrent-edit/different-component",
+    "agent-concurrent-edit/retry-after-conflict",
+    "agent-failure/invalid-proposal",
+    "agent-failure/timeout",
+    "agent-failure/context-over-8kb",
+    "coordinated-change/two-cards",
+    "coordinated-change/card-and-html",
+    "coordinated-change/capacity-boundary",
+    "comment-lifecycle/orphan",
+    "comment-lifecycle/reanchor",
+    "comment-lifecycle/resolve",
+    "export-restore/roundtrip",
+    "export-restore/missing-blob",
+    "export-restore/interrupted",
+    "reconnect/draft-offline",
+    "reconnect/concurrent-edit",
+    "reconnect/reload-resume",
+    "accessibility/keyboard-loop",
+    "accessibility/narrow-large-text",
+    "accessibility/error-announcement"
+  ]
+}

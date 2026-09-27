@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "id": "welcome",
+      "title": "A rough direction",
+      "body": "Keep this message clear.",
+      "color": "#6366f1"
+    },
+    {
+      "id": "details",
+      "title": "Supporting detail",
+      "body": "Preserve unrelated content.",
+      "color": "#14b8a6"
+    }
+  ]
+}

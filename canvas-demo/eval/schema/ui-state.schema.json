@@ -25,6 +25,12 @@
     "dirty": { "type": "boolean" },
     "running": { "type": "boolean" },
     "connection": { "enum": ["connected", "reconnecting", "disconnected"] },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": { "status": { "enum": ["none", "pending", "ready", "conflicted"] } }
+    },
     "dialogs": {
       "type": "array",
       "items": {

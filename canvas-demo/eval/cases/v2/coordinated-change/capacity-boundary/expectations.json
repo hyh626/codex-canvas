@@ -1,0 +1,223 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "coordinated-change/capacity-boundary",
+  "initial_model": {
+    "components": [
+      {
+        "id": "card-a",
+        "title": "Launch plan",
+        "body": "Keep the launch focused.",
+        "color": "#6366f1"
+      },
+      {
+        "id": "card-b",
+        "title": "Research notes",
+        "body": "Interview five customers.",
+        "color": "#14b8a6"
+      },
+      {
+        "id": "card-c",
+        "title": "Capacity card 2",
+        "body": "Preserved body 2.",
+        "color": "#64748b"
+      },
+      {
+        "id": "card-d",
+        "title": "Capacity card 3",
+        "body": "Preserved body 3.",
+        "color": "#64748b"
+      },
+      {
+        "id": "card-e",
+        "title": "Capacity card 4",
+        "body": "Preserved body 4.",
+        "color": "#64748b"
+      },
+      {
+        "id": "card-f",
+        "title": "Capacity card 5",
+        "body": "Preserved body 5.",
+        "color": "#64748b"
+      },
+      {
+        "id": "card-g",
+        "title": "Capacity card 6",
+        "body": "Preserved body 6.",
+        "color": "#64748b"
+      },
+      {
+        "id": "card-h",
+        "title": "Capacity card 7",
+        "body": "Preserved body 7.",
+        "color": "#64748b"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "seed-fixture-checkpoint",
+      "after_action_id": "seed-fixture",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "card-a",
+            "title": "Launch plan",
+            "body": "Keep the launch focused.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "card-b",
+            "title": "Research notes",
+            "body": "Interview five customers.",
+            "color": "#14b8a6"
+          },
+          {
+            "id": "card-c",
+            "title": "Capacity card 2",
+            "body": "Preserved body 2.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-d",
+            "title": "Capacity card 3",
+            "body": "Preserved body 3.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-e",
+            "title": "Capacity card 4",
+            "body": "Preserved body 4.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-f",
+            "title": "Capacity card 5",
+            "body": "Preserved body 5.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-g",
+            "title": "Capacity card 6",
+            "body": "Preserved body 6.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-h",
+            "title": "Capacity card 7",
+            "body": "Preserved body 7.",
+            "color": "#64748b"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "card-a",
+            "selected_scenario_id": "human-edit",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "exercise-cuj-checkpoint",
+      "after_action_id": "exercise-cuj",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "card-a",
+            "title": "At capacity",
+            "body": "Keep the launch focused.",
+            "color": "#6366f1"
+          },
+          {
+            "id": "card-b",
+            "title": "Research notes",
+            "body": "Interview five customers.",
+            "color": "#14b8a6"
+          },
+          {
+            "id": "card-c",
+            "title": "Capacity card 2",
+            "body": "Preserved body 2.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-d",
+            "title": "Capacity card 3",
+            "body": "Preserved body 3.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-e",
+            "title": "Capacity card 4",
+            "body": "Preserved body 4.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-f",
+            "title": "Capacity card 5",
+            "body": "Preserved body 5.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-g",
+            "title": "Capacity card 6",
+            "body": "Preserved body 6.",
+            "color": "#64748b"
+          },
+          {
+            "id": "card-h",
+            "title": "Capacity card 7",
+            "body": "Preserved body 7.",
+            "color": "#64748b"
+          }
+        ]
+      },
+      "invariants": [
+        {
+          "scope": "model",
+          "operator": "exists",
+          "path": "/components/0/id"
+        },
+        {
+          "scope": "model",
+          "operator": "equals",
+          "path": "/components/0/id",
+          "value": "card-a"
+        }
+      ],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "card-a",
+            "selected_scenario_id": "human-edit",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "exercise-cuj-checkpoint"
+}

@@ -1,0 +1,2 @@
+{"schema_version":1,"action_id":"seed-fixture","step":1,"kind":"seed_fixture","driver":"api","input":{},"expectation_checkpoint_id":"seed-fixture-checkpoint","live_capture_points":[{"phase":"after","ready_when":{"signal":"render_idle"}}]}
+{"schema_version":1,"action_id":"exercise-cuj","step":2,"kind":"reconnect","driver":"ui","input":{"operation":"reload_resume","draft":"Resume draft"},"expectation_checkpoint_id":"exercise-cuj-checkpoint","live_capture_points":[{"phase":"after","ready_when":{"signal":"render_idle"}}]}

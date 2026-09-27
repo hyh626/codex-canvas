@@ -10,6 +10,7 @@
     "start": "node server.mjs",
     "test": "node --test test/*.test.mjs",
     "eval:generate": "node eval/generate-cases.mjs",
+    "eval:validate:inputs": "node eval/validate-v2-inputs.mjs",
     "eval:run": "node eval/run.mjs",
     "eval:validate": "node eval/validate-run.mjs",
     "desktop": "electron electron/main.cjs",

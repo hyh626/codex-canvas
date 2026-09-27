@@ -1,0 +1,2 @@
+{"schema_version":1,"action_id":"seed-fixture","step":1,"kind":"seed_fixture","driver":"api","input":{},"expectation_checkpoint_id":"seed-fixture-cp","live_capture_points":[{"phase":"after","ready_when":{"signal":"render_idle"}}]}
+{"schema_version":1,"action_id":"run-agent","step":2,"kind":"agent_proposal","driver":"engine","input":{"engine":"mock","prompt":"Update the title.","fault_profile":"timeout"},"expectation_checkpoint_id":"run-agent-cp","live_capture_points":[{"phase":"error","ready_when":{"signal":"error_visible"}}]}
