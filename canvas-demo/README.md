@@ -32,6 +32,8 @@ The proposed model-to-render evaluation bundle is specified in [eval/FORMAT.zh-C
 
 The [v2 CUJ TDD corpus](eval/V2-CUJ-TDD.md) adds 24 cases for proposal review, concurrent edits, failure handling, coordinated changes, comments, restore, reconnect, and accessibility. Validate inputs with `npm run eval:validate:inputs`, then run `npm run eval:run -- --corpus v2`.
 
+The [proposed mind map CUJs](MIND-MAP-CUJ-PLAN.md) define 24 v3 cases for hierarchical map creation, editing, restructuring, exploration, agent review, comments, and recovery. Mind map support and these eval cases are planned, not implemented.
+
 ## What is authoritative in this MVP?
 
 The **committed event chain and immutable snapshot blobs** are authoritative. Each snapshot
