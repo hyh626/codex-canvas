@@ -1,0 +1,80 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "audited-request/capture-on",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "0fd5389c-ac69-4c59-93c5-6da026674fcd",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "87566a32-a93b-42b3-94cb-ef3cafafec63",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "ffc505e1-8295-46e2-8021-de5686925503",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "e35c4544-5528-4989-b114-8998a97520f5",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "4b7c1656-8ee8-48d8-910b-b8f81a69c4e3",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "5a640539-9079-47ae-bbc0-a2f0982c4195",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "event",
+      "actual_id": "e92262f2-2f46-4bf2-ac90-84c3d884596b",
+      "alias": "event-000006",
+      "defined_at_seq": 6
+    },
+    {
+      "kind": "event",
+      "actual_id": "d98dffa0-7465-415d-aee7-0e1d51d54887",
+      "alias": "event-000007",
+      "defined_at_seq": 7
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "64eda52c-4ab5-4c7e-90af-5aa67f80888f",
+      "alias": "command-0002",
+      "defined_at_seq": 7
+    }
+  ]
+}

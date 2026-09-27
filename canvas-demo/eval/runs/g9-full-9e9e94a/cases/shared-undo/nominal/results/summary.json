@@ -1,0 +1,35 @@
+{
+  "format": "canvas-render-eval-summary-v1",
+  "case_id": "shared-undo/nominal",
+  "status": "pass",
+  "coverage": {
+    "events": {
+      "expected": 11,
+      "captured": 11,
+      "complete": true
+    },
+    "live_checkpoints": {
+      "expected": 7,
+      "captured": 7,
+      "complete": true
+    }
+  },
+  "counts": {
+    "actions": 6,
+    "captures_ok": 18,
+    "captures_failed": 0,
+    "assertions": 26,
+    "required_failed": 0
+  },
+  "final": {
+    "event_seq": 11,
+    "revision": 6,
+    "model_hash": "8e7e84d2bd20d0e21a8ce11de5d221ed339837f6789ef940b890e10dde1d9be6"
+  },
+  "timing_ms": {
+    "execute": 9515.18413200001,
+    "replay_render": 8671.462971,
+    "oracles": 0.3684320000029402
+  },
+  "failures": []
+}

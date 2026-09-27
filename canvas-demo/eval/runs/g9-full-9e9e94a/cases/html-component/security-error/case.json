@@ -1,0 +1,62 @@
+{
+  "format": "canvas-render-eval-case-v1",
+  "case_id": "html-component/security-error",
+  "scenario_id": "html-component",
+  "example_id": "security-error",
+  "title": "Reject unsafe or ambiguous HTML mutations",
+  "seed": 1503,
+  "generation": {
+    "mode": "execute_actions",
+    "parameterized_scenario": true
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000,
+    "device_scale_factor": 1
+  },
+  "view_policy": {
+    "selected_component_id": "hero",
+    "selected_scenario_id": "html-component",
+    "open_panel": "none",
+    "focus": null,
+    "scroll": {
+      "app_x": 0,
+      "app_y": 0,
+      "canvas_x": 0,
+      "canvas_y": 0
+    }
+  },
+  "paths": {
+    "expectations": "inputs/expectations.json",
+    "actions": "inputs/actions.jsonl",
+    "action_results": "execution/action-results.jsonl",
+    "events": "trajectory/events.jsonl",
+    "trajectory_blobs": "trajectory/blobs/sha256",
+    "id_aliases": "execution/id-aliases.json",
+    "captures": "observations/captures.jsonl",
+    "artifacts": "artifacts/sha256",
+    "assertions": "results/assertions.jsonl",
+    "summary": "results/summary.json"
+  },
+  "oracles": {
+    "structural": true,
+    "visual_regression": {
+      "enabled": false,
+      "baseline_manifest": null
+    },
+    "visual_quality": {
+      "enabled": true,
+      "rubric_version": "v1",
+      "blocking": false
+    }
+  },
+  "reproducibility": {
+    "semantic_fingerprint": "203a2ad62c5521dfbee7de961c897dda290a09ec0b8ea21cb25eafbe16ac74a6",
+    "generated_id_strategy": "deterministic-provider",
+    "volatile_event_fields": [
+      "/event_id",
+      "/session_id",
+      "/timestamp"
+    ]
+  }
+}

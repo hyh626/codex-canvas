@@ -1,0 +1,188 @@
+{
+  "format": "canvas-render-eval-expectations-v1",
+  "case_id": "shared-undo/branch-invalidation",
+  "initial_model": {
+    "components": [
+      {
+        "id": "welcome",
+        "title": "Baseline",
+        "body": "Human and agent commits use the same history.",
+        "color": "#6366f1"
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "checkpoint_id": "load-scenario-checkpoint",
+      "after_action_id": "load-scenario",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "scenario.started"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "Baseline",
+            "body": "Human and agent commits use the same history.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "shared-undo",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "human-edit-checkpoint",
+      "after_action_id": "human-edit",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "Human version",
+            "body": "Human and agent commits use the same history.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "shared-undo",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "undo-human-checkpoint",
+      "after_action_id": "undo-human",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "Baseline",
+            "body": "Human and agent commits use the same history.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "shared-undo",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "branch-edit-checkpoint",
+      "after_action_id": "branch-edit",
+      "expected_action_status": "succeeded",
+      "expected_events": {
+        "sequence": [
+          "workspace.edit_committed"
+        ],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "New branch",
+            "body": "Human and agent commits use the same history.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "after",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "shared-undo",
+            "connection": "connected",
+            "running": false
+          },
+          "invariants": []
+        }
+      ]
+    },
+    {
+      "checkpoint_id": "redo-rejected-checkpoint",
+      "after_action_id": "redo-rejected",
+      "expected_action_status": "rejected",
+      "expected_events": {
+        "sequence": [],
+        "allow_additional": true
+      },
+      "expected_model": {
+        "components": [
+          {
+            "id": "welcome",
+            "title": "New branch",
+            "body": "Human and agent commits use the same history.",
+            "color": "#6366f1"
+          }
+        ]
+      },
+      "invariants": [],
+      "live_checkpoints": [
+        {
+          "phase": "error",
+          "expected_ui": {
+            "selected_component_id": "welcome",
+            "selected_scenario_id": "shared-undo",
+            "connection": "connected",
+            "running": false,
+            "status": {
+              "tone": "error"
+            }
+          },
+          "invariants": []
+        }
+      ]
+    }
+  ],
+  "final_checkpoint_id": "redo-rejected-checkpoint"
+}

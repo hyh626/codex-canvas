@@ -1,0 +1,50 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "html-component/security-error",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "60e04214-9e0c-4e85-a0f9-c7ba63714a71",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "56c1bae9-b070-40d8-b6ef-0bdffe5cb0a3",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "7c1b3923-ffc2-4d9d-b4ee-32c956d477ae",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "56d844df-9c9a-4c34-9b17-a9e4c0cebf9e",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    }
+  ]
+}

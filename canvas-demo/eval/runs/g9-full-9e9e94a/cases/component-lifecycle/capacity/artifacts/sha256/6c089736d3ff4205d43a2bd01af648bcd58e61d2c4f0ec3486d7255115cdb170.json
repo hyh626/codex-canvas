@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "selected_component_id": "welcome",
+  "selected_scenario_id": "component-lifecycle",
+  "open_panel": "model",
+  "focus": null,
+  "scroll": {
+    "app_x": 0,
+    "app_y": 263,
+    "canvas_x": 0,
+    "canvas_y": 0
+  },
+  "dirty": false,
+  "running": false,
+  "connection": "connected",
+  "dialogs": [
+    {
+      "id": "inlineEdit",
+      "open": false
+    }
+  ],
+  "editor": {
+    "mode": "none",
+    "draft": null,
+    "error": "Canvas needs 1–8 components",
+    "rebase_available": false
+  },
+  "status": {
+    "text": "Canvas needs 1–8 components",
+    "tone": "error"
+  },
+  "controls": {
+    "undo_enabled": false,
+    "redo_enabled": false,
+    "run_enabled": true
+  }
+}

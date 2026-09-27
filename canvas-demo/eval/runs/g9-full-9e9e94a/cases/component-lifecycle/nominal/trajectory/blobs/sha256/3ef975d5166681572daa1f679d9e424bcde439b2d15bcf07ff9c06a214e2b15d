@@ -1,0 +1,1 @@
+[{"after":null,"before":{"body":"Duplicate this card.","color":"#6366f1","id":"card-8e368f92","title":"Alpha"},"component_id":"card-8e368f92","node_id":null},{"after":["alpha","omega"],"before":["alpha","omega","card-8e368f92"],"node_id":"component-order"}]

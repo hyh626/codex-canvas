@@ -1,0 +1,128 @@
+{
+  "format": "canvas-render-eval-id-aliases-v1",
+  "case_id": "shared-undo/nominal",
+  "references_preserved": true,
+  "event_reference_paths": [
+    "/event_id",
+    "/caused_by/*",
+    "/payload/target",
+    "/payload/request_event_id",
+    "/payload/command_id"
+  ],
+  "derived_value_paths": [
+    {
+      "path": "/payload/fingerprint",
+      "comparison": "recompute_from_canonical_projection"
+    }
+  ],
+  "mappings": [
+    {
+      "kind": "session",
+      "actual_id": "f725e5f8-8bf8-4695-8cb6-7603308f711c",
+      "alias": "session-01",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "2ee80833-e1dd-4d21-a832-3c3edf75ee84",
+      "alias": "event-000001",
+      "defined_at_seq": 1
+    },
+    {
+      "kind": "event",
+      "actual_id": "1c13d41a-6190-4efd-aa41-8c1348218214",
+      "alias": "event-000002",
+      "defined_at_seq": 2
+    },
+    {
+      "kind": "event",
+      "actual_id": "b7aa35bc-e0e7-4e68-86ad-1474eb0cc3f0",
+      "alias": "event-000003",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "event",
+      "actual_id": "fd4b31b4-42d3-4358-8c6a-111907f20452",
+      "alias": "event-000004",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "event",
+      "actual_id": "c46185be-78ef-416f-8b8e-8dcb22c8c401",
+      "alias": "event-000005",
+      "defined_at_seq": 5
+    },
+    {
+      "kind": "event",
+      "actual_id": "56647955-5782-4fd5-9df5-0e0d7c354b08",
+      "alias": "event-000006",
+      "defined_at_seq": 6
+    },
+    {
+      "kind": "event",
+      "actual_id": "1cefabd9-39ec-42fc-9121-d53f353f800e",
+      "alias": "event-000007",
+      "defined_at_seq": 7
+    },
+    {
+      "kind": "event",
+      "actual_id": "76e87ee2-a194-492b-80cb-9764d9618aa3",
+      "alias": "event-000008",
+      "defined_at_seq": 8
+    },
+    {
+      "kind": "event",
+      "actual_id": "9bf506c9-540e-45f3-a0a4-24d730367377",
+      "alias": "event-000009",
+      "defined_at_seq": 9
+    },
+    {
+      "kind": "event",
+      "actual_id": "e0a1dfbf-e938-497c-8890-3974eb50aa95",
+      "alias": "event-000010",
+      "defined_at_seq": 10
+    },
+    {
+      "kind": "event",
+      "actual_id": "9dee936f-cea6-4f8d-9d5c-23b96c241e46",
+      "alias": "event-000011",
+      "defined_at_seq": 11
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-1",
+      "alias": "command-0001",
+      "defined_at_seq": 3
+    },
+    {
+      "kind": "command",
+      "actual_id": "d02aac05-4fef-4f56-a295-7c465fe543cd",
+      "alias": "command-0002",
+      "defined_at_seq": 4
+    },
+    {
+      "kind": "command",
+      "actual_id": "53f3a1ed-7cca-44e3-818d-823179db77d6",
+      "alias": "command-0003",
+      "defined_at_seq": 8
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-4",
+      "alias": "command-0004",
+      "defined_at_seq": 9
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-5",
+      "alias": "command-0005",
+      "defined_at_seq": 10
+    },
+    {
+      "kind": "command",
+      "actual_id": "eval-6",
+      "alias": "command-0006",
+      "defined_at_seq": 11
+    }
+  ]
+}

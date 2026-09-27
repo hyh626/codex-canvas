@@ -1,0 +1,83 @@
+[
+  {
+    "node_id": "root",
+    "x": 0,
+    "y": 0,
+    "width": 760,
+    "height": 153,
+    "display": "flex",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "heading",
+    "x": 24,
+    "y": 24,
+    "width": 218.0625,
+    "height": 105,
+    "display": "block",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "eyebrow",
+    "x": 24,
+    "y": 27,
+    "width": 119.296875,
+    "height": 15,
+    "display": "inline",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "title",
+    "x": 24,
+    "y": 62.90625,
+    "width": 218.0625,
+    "height": 28,
+    "display": "block",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "content",
+    "x": 266.0625,
+    "y": 24,
+    "width": 448.546875,
+    "height": 105,
+    "display": "block",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "body",
+    "x": 266.0625,
+    "y": 40,
+    "width": 448.546875,
+    "height": 19,
+    "display": "block",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "features",
+    "x": 266.0625,
+    "y": 75,
+    "width": 448.546875,
+    "height": 38,
+    "display": "block",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "feature-one",
+    "x": 306.0625,
+    "y": 75,
+    "width": 408.546875,
+    "height": 19,
+    "display": "list-item",
+    "flex_direction": "row"
+  },
+  {
+    "node_id": "feature-two",
+    "x": 306.0625,
+    "y": 94,
+    "width": 408.546875,
+    "height": 19,
+    "display": "list-item",
+    "flex_direction": "row"
+  }
+]

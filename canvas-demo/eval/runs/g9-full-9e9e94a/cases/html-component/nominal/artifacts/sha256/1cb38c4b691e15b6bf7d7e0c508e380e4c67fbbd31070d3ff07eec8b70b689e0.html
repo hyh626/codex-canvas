@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Canvas / shared model</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">◈ <strong>Canvas</strong><span>LAB / 001</span></a>
+      <div class="header-right">
+        <span id="connection">● Connected</span><span id="revision">r2</span><button id="undo" title="Ctrl/Cmd-Z">↶ Undo</button><button id="redo" title="Ctrl/Cmd-Shift-Z" disabled="">↷ Redo</button><a class="button" href="/api/export">Export trajectory ↗</a>
+      </div>
+    </header>
+    <main>
+      <aside>
+        <div class="eyebrow">WORKSPACE</div>
+        <h1>A shared<br>place to think.</h1>
+        <p class="muted">
+          Edit a card. Ask the agent.<br>Every change meets in one model.
+        </p>
+        <div class="section-label">COMPONENTS <span id="count">01</span></div>
+        <nav id="components"><button class="active">◇  hero</button></nav>
+        <div class="guide">
+          <b>Try the loop</b>
+          <ol>
+            <li>Double-click a card title to edit.</li>
+            <li>Duplicate, reorder, or delete a card.</li>
+            <li>Ask the mock agent to change its color.</li>
+            <li>Undo, then inspect the event.</li>
+            <li>Reload: the model stays.</li>
+          </ol>
+        </div>
+        <p class="footnote">
+          Local demo · single writer<br>Cards and editable static HTML components.
+        </p>
+      </aside>
+      <section class="workspace">
+        <section class="cuj-playground" aria-labelledby="cujTitle">
+          <div class="cuj-top">
+            <div>
+              <div class="eyebrow">CUJ PLAYGROUND</div>
+              <h2 id="cujTitle">HTML node + layout edit</h2>
+            </div>
+            <div class="cuj-controls">
+              <label class="sr-only" for="scenario">CUJ scenario</label>
+              <select id="scenario"><option value="human-edit">Human edits the model</option><option value="comment-agent">Comment → agent proposal</option><option value="shared-undo">Human + agent share Undo</option><option value="component-lifecycle">Component lifecycle</option><option value="html-component">HTML node + layout edit</option><option value="audited-request">Audited model request</option></select>
+              <button id="loadScenario" class="primary">Load / restart</button>
+            </div>
+          </div>
+          <p id="cujSummary" class="cuj-summary">Edit authoritative HTML through stable node IDs, then change its layout.</p>
+          <ol id="cujSteps" class="cuj-steps"><li class="done"><span>✓</span><span>Double-click the title and commit “A shared launch”.</span></li><li class=""><span>○</span><span>Run the mock agent with “layout: horizontal”.</span></li></ol>
+          <div class="cuj-result">
+            <span id="cujProgress" class="pill ">In progress · 1/2</span>
+            <span><b>Expected:</b> <span id="cujExpected">Text editing preserves surrounding HTML; the agent changes flex direction to row.</span></span>
+          </div>
+        </section>
+        <div class="canvas-heading">
+          <div>
+            <div class="eyebrow">LIVE CANVAS</div>
+            <h2>Your model, made visible.</h2>
+          </div>
+          <button id="newHTML">＋ HTML component</button><button id="newCard" class="primary">＋ New card</button>
+        </div>
+        <div class="card-toolbar" aria-label="Component actions">
+          <button id="duplicate">Duplicate</button><button id="moveEarlier" disabled="">← Move earlier</button><button id="moveLater" disabled="">Move later →</button><button id="deleteCard" disabled="">Delete</button>
+          <span class="small">Double-click a title or body to edit it.</span>
+        </div>
+        <div id="canvas" aria-label="Canvas components"><article class="card selected" tabindex="0" aria-label="hero" data-component-id="hero" style="--accent: #6366f1;"><iframe title="HTML component hero" sandbox="allow-same-origin" class="html-preview" srcdoc="&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src 'none'; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'none'&quot;&gt;&lt;style&gt;body{margin:0;font-family:system-ui;color:#202039}*{box-sizing:border-box}[data-node-id]:hover{outline:1px dashed #6366f1}&lt;/style&gt;&lt;article data-node-id=&quot;root&quot; style=&quot;display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px&quot;&gt;
+  &lt;header data-node-id=&quot;heading&quot;&gt;&lt;small data-node-id=&quot;eyebrow&quot;&gt;CUJ PLAYGROUND&lt;/small&gt;&lt;h2 data-node-id=&quot;title&quot;&gt;A shared launch&lt;/h2&gt;&lt;/header&gt;
+  &lt;section data-node-id=&quot;content&quot;&gt;&lt;p data-node-id=&quot;body&quot;&gt;Edit this node, then ask the agent to change the layout.&lt;/p&gt;&lt;ul data-node-id=&quot;features&quot;&gt;&lt;li data-node-id=&quot;feature-one&quot;&gt;Stable comment anchors&lt;/li&gt;&lt;li data-node-id=&quot;feature-two&quot;&gt;One shared history&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;
+&lt;/article&gt;"></iframe><small>hero / HTML · double-click text to edit</small></article></div>
+        <section class="composer">
+          <div class="composer-top">
+            <label for="engine">Agent</label><select id="engine">
+              <option value="mock">Deterministic mock</option>
+              <option value="dsh" disabled="">
+                DeepSeek Harness (experimental)
+              </option>
+              <option value="codex" disabled="">
+                Codex · requires provider setup
+              </option></select><span id="audit" class="pill">assert = true · mock request</span>
+          </div>
+          <label class="sr-only" for="prompt">Agent instruction</label><textarea id="prompt" placeholder="Try: 标题：一起把想法变成作品" rows="2" style=""></textarea>
+          <div class="composer-bottom">
+            <div class="presets">
+              <button data-prompt="layout: horizontal">Horizontal layout</button><button data-prompt="change color">Change color</button><button data-prompt="add card">Add card</button>
+            </div>
+            <label class="capture"><input type="checkbox" id="capture" style=""> Capture full
+              request</label><button id="run" class="primary">Run agent ↗</button>
+          </div>
+          <p id="agentNote" class="small">Mock recognizes title text, “change color”, “add card”, and HTML “layout”. No model API call.</p>
+        </section>
+        <p id="status" role="status" class="">Agent proposal validated and committed. Try Undo.</p>
+        <section class="timeline">
+          <div class="section-label">TRAJECTORY <span>APPEND ONLY</span></div>
+          <div id="events"><button class="event-row"><span>007</span><b>model.response_received</b><em>runtime</em></button><button class="event-row"><span>006</span><b>model.request_prepared</b><em>runtime</em></button><button class="event-row"><span>005</span><b>user.message</b><em>human</em></button><button class="event-row"><span>004</span><b>workspace.edit_committed</b><em>human</em></button><button class="event-row"><span>003</span><b>workspace.edit_committed</b><em>human</em></button><button class="event-row"><span>002</span><b>scenario.started</b><em>human</em></button><button class="event-row"><span>001</span><b>session.started</b><em>runtime</em></button></div>
+        </section>
+      </section>
+      <aside class="inspector">
+        <div class="eyebrow">INSPECTOR</div>
+        <h2 id="selected">hero</h2>
+        <form id="editor">
+          <div id="htmlFields"><label for="htmlSource">HTML source</label><textarea id="htmlSource" rows="14" maxlength="12000" style=""></textarea></div>
+          <div id="cardFields" hidden="">
+          <label for="title">Title</label><input id="title" maxlength="120" required="" style="" disabled=""><label for="body">Body</label><textarea id="body" rows="4" maxlength="2000" style="" disabled=""></textarea><label for="color">Accent</label><input type="color" id="color" style="" disabled=""></div><button class="primary" type="submit">
+            Commit edit
+          </button>
+          <p class="small">
+            Edits become one undoable transaction.<br>Typing stays local until
+            committed.
+          </p>
+        </form><button id="reloadEditor">Reload latest component</button>
+        <hr>
+        <label for="comment">Comment on this component</label><select id="anchor"><option value="root">root</option><option value="heading">heading</option><option value="eyebrow">eyebrow</option><option value="title">title</option><option value="content">content</option><option value="body">body</option><option value="features">features</option><option value="feature-one">feature-one</option><option value="feature-two">feature-two</option></select><textarea id="comment" rows="2" maxlength="2000" placeholder="Give feedback for the next agent turn" style=""></textarea><button id="addComment">Add comment</button>
+        <div id="comments" aria-label="Component comments">No comments on this component yet.</div>
+        <details open="">
+          <summary>Data model</summary>
+          <pre id="model">{
+  "revision": 2,
+  "components": [
+    {
+      "html": "&lt;article data-node-id=\"root\" style=\"display:flex;flex-direction:column;gap:16px;padding:24px;background:#eef2ff;border-radius:16px\"&gt;\n  &lt;header data-node-id=\"heading\"&gt;&lt;small data-node-id=\"eyebrow\"&gt;CUJ PLAYGROUND&lt;/small&gt;&lt;h2 data-node-id=\"title\"&gt;A shared launch&lt;/h2&gt;&lt;/header&gt;\n  &lt;section data-node-id=\"content\"&gt;&lt;p data-node-id=\"body\"&gt;Edit this node, then ask the agent to change the layout.&lt;/p&gt;&lt;ul data-node-id=\"features\"&gt;&lt;li data-node-id=\"feature-one\"&gt;Stable comment anchors&lt;/li&gt;&lt;li data-node-id=\"feature-two\"&gt;One shared history&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;\n&lt;/article&gt;",
+      "id": "hero",
+      "kind": "html"
+    }
+  ]
+}</pre>
+        </details>
+        <details>
+          <summary>Selected event</summary>
+          <pre id="event"></pre>
+        </details>
+      </aside>
+    </main>
+    <dialog id="inlineEdit" aria-labelledby="inlineLabel">
+      <form id="inlineForm">
+        <h2 id="inlineLabel">Edit title</h2>
+        <p id="inlineContext" class="small">hero · revision 1. Later changes will cause a conflict.</p>
+        <label for="inlineText">Text</label><textarea id="inlineText" rows="5" style="" maxlength="120"></textarea>
+        <p id="inlineError" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="rebaseInline" type="button">Compare latest / retain draft</button><button id="cancelInline" type="button">Cancel</button><button class="primary" type="submit">Commit edit</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="/app.js"></script>
+  
+
+</body></html>
