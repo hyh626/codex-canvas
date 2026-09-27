@@ -91,7 +91,7 @@
             "selected_component_id": "welcome",
             "selected_scenario_id": "human-edit",
             "connection": "connected",
-            "running": false,
+            "running": true,
             "status": {
               "tone": "error",
               "text": "The proposal is based on an older revision. Your edit is preserved; retry against the latest version."

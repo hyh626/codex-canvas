@@ -116,13 +116,18 @@ async function commentLifecycle(action, context) {
   // the explicit lifecycle route so a missing product endpoint is observed as
   // an actual HTTP failure, with the successfully created anchor retained.
   const pathname = `/api/comment-lifecycle/${encodeURIComponent(action.input.operation)}`;
+  const sourceNode = action.input.from_node_id?.endsWith("-title") ? "title" : action.input.from_node_id;
+  const targetComponentId = action.input.to_node_id?.replace(/-(title|body)$/, "");
+  const targetNodeId = action.input.to_node_id?.match(/-(title|body)$/)?.[1] ?? action.input.to_node_id;
   const lifecycle = await request("POST", pathname, {
     comment_id: created.event_id,
     component_id: selectedComponentId,
-    from_node_id: action.input.from_node_id,
-    to_node_id: action.input.to_node_id,
+    from_node_id: sourceNode,
+    target_component_id: targetComponentId,
+    to_node_id: targetNodeId,
     operation: action.input.operation,
   });
+  if (lifecycle.ok) await renderSnapshot(lifecycle.body, { selectedComponentId });
   return {
     ...lifecycle,
     evidence: {
@@ -365,6 +370,10 @@ async function keyboardInteraction(action, context) {
     scroll_width: document.documentElement.scrollWidth,
     viewport_width: document.documentElement.clientWidth,
     focused_component_id: document.activeElement?.closest?.("[data-component-id]")?.dataset.componentId ?? null,
+    overflowing_elements: [...document.querySelectorAll("body *")]
+      .filter((element) => element.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
+      .slice(0, 12)
+      .map((element) => ({ tag: element.tagName.toLowerCase(), id: element.id, class_name: element.className, right: Math.round(element.getBoundingClientRect().right) })),
   }));
   const reachable = !steps.includes("open-card") || layout.focused_component_id === selectedComponentId;
   const noOverflow = layout.scroll_width <= layout.viewport_width;

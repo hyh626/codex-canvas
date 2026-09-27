@@ -130,7 +130,7 @@
         {
           "phase": "after",
           "expected_ui": {
-            "selected_component_id": "welcome",
+            "selected_component_id": "details",
             "selected_scenario_id": "human-edit",
             "connection": "connected",
             "running": false,
@@ -160,7 +160,7 @@
           {
             "id": "welcome",
             "title": "Human title",
-            "body": "Updated body",
+            "body": "Keep this message clear.",
             "color": "#6366f1"
           },
           {

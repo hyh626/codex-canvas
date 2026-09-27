@@ -32,7 +32,7 @@ Use `--case proposal-review/accept` to run one case. Set `CANVAS_EVAL_BROWSER_EX
 
 ## Baseline and implementation order
 
-On 2026-09-26, the full v2 run produced **7 pass, 17 fail**. The seven passing cases are the three agent failure cases, the three coordinated change cases, and the orphaned comment case. The failing cases have valid evidence bundles; they are product gaps to address in TDD order:
+The first full v2 baseline on 2026-09-26 produced **7 pass, 17 fail**. After implementing the contracts, the complete v2 corpus passes **24/24** with a valid evidence bundle. The original red groups guided this order:
 
 1. Proposal staging and decision, then concurrent agent editing. These six cases define the review and conflict boundary.
 2. Comment reanchor and resolve. The driver creates an actual comment before invoking the missing lifecycle API.

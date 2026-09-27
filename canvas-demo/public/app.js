@@ -7,9 +7,21 @@ let view,
   editRevision,
   dirty = false,
   running = false,
+  runningRevision = null,
   inlineTarget = null,
   selectedScenarioId = scenarios[0].id;
 const evalMode = new URLSearchParams(location.search).get("eval") === "1";
+const inlineDraftKey = "canvas.inline-draft.v1";
+const saveInlineDraft = () => {
+  if ($("inlineEdit").open && inlineTarget)
+    sessionStorage.setItem(inlineDraftKey, JSON.stringify({ ...inlineTarget, value: $("inlineText").value }));
+};
+const clearInlineDraft = () => sessionStorage.removeItem(inlineDraftKey);
+const refreshConnection = () => {
+  $("connection").textContent = navigator.onLine ? "● Connected" : "Disconnected";
+};
+window.addEventListener("offline", refreshConnection);
+window.addEventListener("online", refreshConnection);
 const status = (text, error = false) => {
   $("status").textContent = text;
   $("status").className = error ? "error" : "";
@@ -73,7 +85,21 @@ function renderScenario(followActive = true) {
     (progress.active && completed === automated.length ? "passed" : "");
 }
 function render(next) {
+  const previousProposalStatus = view?.proposal?.status;
   view = next;
+  const proposalStatus = view.proposal?.status ?? "none";
+  $("proposalReview").hidden = proposalStatus === "none";
+  $("proposalSummary").textContent = proposalStatus === "conflicted"
+    ? "This proposal is based on an older revision. Review the latest canvas and retry."
+    : proposalStatus === "pending"
+      ? `Staged at revision ${view.proposal.baseRevision}. Accept or reject before it changes the canvas.`
+      : "";
+  $("acceptProposal").disabled = proposalStatus !== "pending";
+  $("rejectProposal").disabled = proposalStatus !== "pending";
+  if (running && runningRevision !== null && view.revision !== runningRevision)
+    status("The proposal is based on an older revision. Your edit is preserved; retry against the latest version.", true);
+  else if (proposalStatus === "pending" && previousProposalStatus !== "pending")
+    status("Proposal ready for review.");
   if (!view.state.components.some((c) => c.id === selected)) {
     selected = view.state.components[0].id;
     dirty = false;
@@ -130,9 +156,11 @@ function render(next) {
     const title = document.createElement("h3");
     title.dataset.nodeId = "title";
     title.textContent = c.title;
+    title.tabIndex = 0;
     const body = document.createElement("p");
     body.dataset.nodeId = "body";
     body.textContent = c.body;
+    body.tabIndex = 0;
     for (const [element, nodeId] of [
       [title, "title"],
       [body, "body"],
@@ -140,6 +168,13 @@ function render(next) {
       element.ondblclick = (event) => {
         event.stopPropagation();
         openInline(c, nodeId);
+      };
+      element.onkeydown = (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          event.stopPropagation();
+          openInline(c, nodeId);
+        }
       };
       element.title = "Double-click to edit";
     }
@@ -177,31 +212,57 @@ function render(next) {
     $("events").append(row);
   }
   $("comments").replaceChildren();
-  const comments = view.events.filter(
-    (e) => e.type === "comment.created" && e.payload.component_id === selected,
-  );
+  const comments = (view.comments ?? []).filter((comment) => comment.component_id === selected);
   if (!comments.length)
     $("comments").textContent = "No comments on this component yet.";
-  for (const event of comments) {
+  for (const comment of comments) {
     const item = document.createElement("article");
     item.className = "comment-item";
     const anchor = document.createElement("small");
-    anchor.textContent = `${event.payload.node_id} · anchored at r${event.payload.revision}`;
+    anchor.textContent = `${comment.node_id} · anchored at r${comment.revision}${comment.resolved ? " · resolved" : ""}`;
     const text = document.createElement("p");
-    text.textContent = event.payload.text;
+    text.textContent = comment.text;
     const use = document.createElement("button");
     use.textContent = "Use as agent instruction";
+    use.disabled = comment.resolved;
     use.onclick = () => {
-      $("prompt").value = event.payload.text;
+      $("prompt").value = comment.text;
       $("prompt").focus();
       status("Comment copied into the agent prompt. Review it, then run.");
     };
     const component = view.state.components.find(c => c.id === selected);
     const ids = component.kind === 'html' ? htmlNodes(component.html).map(n => n.id) : ['title','body'];
-    const located = ids.includes(event.payload.node_id);
+    const located = ids.includes(comment.node_id);
     const locate = document.createElement('button'); locate.textContent = located ? 'Locate node' : 'Node removed · historical comment'; locate.disabled = !located;
-    locate.onclick = () => locateHTML(selected, event.payload.node_id);
+    locate.onclick = () => locateHTML(selected, comment.node_id);
     item.append(anchor, text, locate, use);
+    if (!comment.resolved) {
+      const target = document.createElement("select");
+      target.setAttribute("aria-label", "New comment anchor");
+      for (const candidate of view.state.components) {
+        const nodes = candidate.kind === "html" ? htmlNodes(candidate.html).map((node) => node.id) : ["title", "body"];
+        for (const nodeId of nodes) target.append(new Option(`${candidate.id} · ${nodeId}`, `${candidate.id}/${nodeId}`));
+      }
+      target.value = `${comment.component_id}/${comment.node_id}`;
+      const reanchor = document.createElement("button");
+      reanchor.textContent = "Move anchor";
+      reanchor.onclick = () => act(async () => {
+        const [targetComponentId, targetNodeId] = target.value.split("/");
+        render(await api("comment-lifecycle/reanchor", {
+          comment_id: comment.comment_id,
+          component_id: comment.component_id,
+          from_node_id: comment.node_id,
+          target_component_id: targetComponentId,
+          to_node_id: targetNodeId,
+        }));
+      }, "Comment anchor moved.");
+      const resolve = document.createElement("button");
+      resolve.textContent = "Resolve comment";
+      resolve.onclick = () => act(async () => {
+        render(await api("comment-lifecycle/resolve", { comment_id: comment.comment_id }));
+      }, "Comment resolved.");
+      item.append(target, reanchor, resolve);
+    }
     $("comments").append(item);
   }
   renderScenario();
@@ -244,6 +305,7 @@ function observedUIState() {
     scroll: { app_x: Math.round(scrollX), app_y: Math.round(scrollY), canvas_x: Math.round($("canvas").scrollLeft), canvas_y: Math.round($("canvas").scrollTop) },
     dirty,
     running,
+    proposal: { status: view.proposal?.status ?? "none" },
     connection: $("connection").textContent.includes("Connected") ? "connected" : $("connection").textContent.includes("Reconnecting") ? "reconnecting" : "disconnected",
     dialogs: [{ id: "inlineEdit", open: inlineOpen }],
     editor: {
@@ -254,7 +316,7 @@ function observedUIState() {
     },
     status: {
       text: statusText,
-      tone: error ? "error" : running ? "pending" : /committed|validated|passed/i.test(statusText) ? "success" : "neutral",
+      tone: error ? "error" : running || view.proposal?.status === "pending" ? "pending" : /committed|validated|passed/i.test(statusText) ? "success" : "neutral",
     },
     controls: { undo_enabled: !$("undo").disabled, redo_enabled: !$("redo").disabled, run_enabled: !$("run").disabled },
   };
@@ -281,6 +343,7 @@ if (evalMode) {
       openInline(component, nodeId);
       inlineTarget.baseRevision = baseRevision;
       $("inlineText").value = value;
+      saveInlineDraft();
     },
     showError(message) {
       status(message, true);
@@ -318,7 +381,9 @@ function openInline(card, nodeId) {
   $("inlineError").textContent = "";
   $("inlineEdit").showModal();
   $("inlineText").focus();
+  saveInlineDraft();
 }
+$("inlineText").addEventListener("input", saveInlineDraft);
 $('rebaseInline').onclick = () => {
   const c = view.state.components.find(c => c.id === inlineTarget.componentId);
   const node = c?.kind === 'html' ? htmlNodes(c.html).find(n => n.id === inlineTarget.nodeId && n.leaf) : c && {text:c[inlineTarget.nodeId]};
@@ -326,11 +391,16 @@ $('rebaseInline').onclick = () => {
   $('inlineContext').textContent = `Latest r${view.revision}: ${node.text}. Your draft is retained. Commit explicitly to replace this text.`;
   inlineTarget.baseRevision = view.revision;
   $('inlineError').textContent = '';
+  saveInlineDraft();
 };
 $('reloadEditor').onclick = () => { if (discardDraft()) fillEditor(); };
-$("cancelInline").onclick = () => $("inlineEdit").close();
+$("cancelInline").onclick = () => { $("inlineEdit").close(); clearInlineDraft(); };
 $("inlineForm").onsubmit = async (event) => {
   event.preventDefault();
+  if (inlineTarget.nodeId === "title" && !$("inlineText").value.trim()) {
+    $("inlineError").textContent = "Title cannot be empty";
+    return;
+  }
   try {
     const next = await api("component", {
       operation: "set_text",
@@ -338,6 +408,7 @@ $("inlineForm").onsubmit = async (event) => {
       text: $("inlineText").value,
     });
     $("inlineEdit").close();
+    clearInlineDraft();
     render(next);
     status("Canvas text committed with its target and source diff.");
   } catch (error) {
@@ -432,6 +503,7 @@ $("run").onclick = () =>
   act(async () => {
     if (running) return;
     running = true;
+    runningRevision = view.revision;
     $("run").disabled = true;
     status("Agent is preparing a proposal…");
     try {
@@ -442,13 +514,36 @@ $("run").onclick = () =>
           capture: $("capture").checked,
           componentId: selected,
           baseRevision: view.revision,
+          reviewMode: $("reviewBeforeCommit").checked ? "stage" : "commit",
         }),
       );
     } finally {
       running = false;
+      runningRevision = null;
       $("run").disabled = false;
     }
-  }, "Agent proposal validated and committed. Try Undo.");
+  }, $("reviewBeforeCommit").checked ? "Proposal ready for review." : "Agent proposal validated and committed. Try Undo.");
+for (const [buttonId, decision] of [["acceptProposal", "accept"], ["rejectProposal", "reject"]])
+  $(buttonId).onclick = () => act(async () => {
+    const proposal = view.proposal;
+    render(await api("proposal", { proposalId: proposal.proposalId, decision, baseRevision: proposal.baseRevision }));
+  }, decision === "accept" ? "Proposal accepted and committed." : "Proposal rejected without changing the canvas.");
+$("importArchive").onclick = () => $("importFile").click();
+$("importFile").onchange = async () => {
+  const file = $("importFile").files[0];
+  if (!file) return;
+  try {
+    const archive = JSON.parse(await file.text());
+    if (!confirm("Replace this workspace with the imported trajectory?")) return;
+    clearInlineDraft();
+    render(await api("import", { archive }));
+    status("Trajectory restored with its full history.");
+  } catch (error) {
+    status(error.message, true);
+  } finally {
+    $("importFile").value = "";
+  }
+};
 for (const button of document.querySelectorAll("[data-prompt]"))
   button.onclick = () => {
     $("prompt").value = button.dataset.prompt;
@@ -478,8 +573,21 @@ try {
   $("engine").querySelector("[value=dsh]").disabled = !initial.dshEnabled;
   render(initial);
   status("Ready. Edit the selected component or try an agent instruction.");
+  const savedInline = sessionStorage.getItem(inlineDraftKey);
+  if (savedInline) {
+    try {
+      const draft = JSON.parse(savedInline);
+      const component = view.state.components.find((item) => item.id === draft.componentId);
+      if (component) {
+        openInline(component, draft.nodeId);
+        inlineTarget.baseRevision = draft.baseRevision;
+        $("inlineText").value = draft.value;
+        saveInlineDraft();
+      } else clearInlineDraft();
+    } catch { clearInlineDraft(); }
+  }
   if (evalMode) {
-    $("connection").textContent = "● Connected";
+    refreshConnection();
   } else {
     const events = new EventSource("/api/stream");
     events.onmessage = (e) => render(JSON.parse(e.data));

@@ -93,6 +93,8 @@ export function componentCommand(store, data) {
       }
       if (!["title", "body"].includes(nodeId) || typeof text !== "string")
         throw Error("Unsupported editable node");
+      if (nodeId === "title" && !text.trim())
+        throw Object.assign(Error("Title cannot be empty"), { status: 422 });
       card[nodeId] = text;
       break;
     default:

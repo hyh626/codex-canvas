@@ -47,13 +47,13 @@ See [HTML CUJ and acceptance](HTML-CUJ.zh-CN.md); arbitrary HTML import is unsup
 | ---------------- | ------------------------------------------------------------------------------ |
 | Identity         | Stable component ID and `title` / `body` node IDs                              |
 | Manual edits     | One form submission = one validated transaction                                |
-| Agent edits      | Proposal → validation → revision check → commit → UI event                     |
+| Agent edits      | Proposal → validation → revision check → commit, or explicit review before commit |
 | Concurrency      | Optimistic revision check; stale writes fail with HTTP 409                     |
 | Undo             | Append inverse snapshot as a new revision; redo keeps original target          |
 | Durability       | Blob and event fsync before acknowledgment; replay on startup                  |
 | Crash recovery   | Incomplete trailing JSONL preserved separately, committed prefix replayed      |
 | Writer ownership | Exclusive lock file; a second process refuses to open the same store           |
-| Export           | Exact JSONL bytes plus base64-encoded blobs; tested restore into a fresh store |
+| Export/import    | Exact JSONL bytes plus base64-encoded blobs; validated restore with rollback before replacement |
 | Request audit    | Independent mock-request reconstruction from disk, deep equality + hash        |
 | Request capture  | Full request snapshot OFF by default; explicit checkbox enables it             |
 | HTML safety      | Supported text fields are escaped; UI inserts text with `textContent`          |

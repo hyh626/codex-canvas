@@ -16,6 +16,8 @@
         ><button id="undo" title="Ctrl/Cmd-Z">↶ Undo</button
         ><button id="redo" title="Ctrl/Cmd-Shift-Z">↷ Redo</button
         ><a class="button" href="/api/export">Export trajectory ↗</a>
+        <button id="importArchive" type="button">Import trajectory</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden />
       </div>
     </header>
     <main>
@@ -103,6 +105,9 @@
             <label class="capture"
               ><input type="checkbox" id="capture" /> Capture full
               request</label
+            ><label class="capture"
+              ><input type="checkbox" id="reviewBeforeCommit" /> Review proposal
+              before commit</label
             ><button id="run" class="primary">Run agent ↗</button>
           </div>
           <p id="agentNote" class="small">
@@ -111,6 +116,14 @@
           </p>
         </section>
         <p id="status" role="status">Loading workspace…</p>
+        <section id="proposalReview" aria-label="Agent proposal review" hidden>
+          <h3>Review agent proposal</h3>
+          <p id="proposalSummary"></p>
+          <div class="composer-bottom">
+            <button id="acceptProposal" type="button">Accept proposal</button>
+            <button id="rejectProposal" type="button">Reject proposal</button>
+          </div>
+        </section>
         <section class="timeline">
           <div class="section-label">TRAJECTORY <span>APPEND ONLY</span></div>
           <div id="events"></div>

@@ -88,7 +88,7 @@ export async function executeV2P0Action({
     return null;
   }
 
-  if (outcome.ok && renderCurrent) await renderCurrent(scenarioId);
-  else await showOutcome(page, outcome);
+  if (renderCurrent && (outcome.ok || actionItem.kind === "proposal_decision")) await renderCurrent(scenarioId);
+  if (!outcome.ok) await showOutcome(page, outcome);
   return outcome;
 }

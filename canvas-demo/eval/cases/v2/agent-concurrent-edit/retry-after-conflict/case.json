@@ -51,7 +51,7 @@
     }
   },
   "reproducibility": {
-    "semantic_fingerprint": "f058e0b329c3452c0e6609870160c9cc3487a94cb8a7f006fee392a96d5b8414",
+    "semantic_fingerprint": "4eefb9aefeb471b07ac02387bbeecd2abb04fd6abd6af0841697998b76f9d193",
     "generated_id_strategy": "deterministic-provider",
     "volatile_event_fields": [
       "/event_id",

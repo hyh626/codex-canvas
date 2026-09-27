@@ -9,6 +9,9 @@ import { runEngine, engineCapabilities } from "./engine.mjs";
 import { componentCommand } from "./commands.mjs";
 import { createGateway } from "./gateway.mjs";
 import { scenarioById } from "./scenarios.mjs";
+import { decideProposal, latestProposal, stageProposal } from "./proposal-review.mjs";
+import { changeComment, currentComments } from "./comment-lifecycle.mjs";
+import { restoreArchive } from "./archive-import.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({
   dir = path.join(here, ".data"),
@@ -26,13 +29,14 @@ export function createApp({
     process.env.CANVAS_API_KEY,
   ),
 } = {}) {
-  const store = new Store(dir);
+  let store = new Store(dir);
   const clients = new Set();
   const token = randomUUID();
   let busy = false;
+  const view = () => ({ ...store.view(), proposal: latestProposal(store), comments: currentComments(store.events) });
   const broadcast = () => {
     for (const client of clients)
-      client.write(`data: ${JSON.stringify(store.view())}\n\n`);
+      client.write(`data: ${JSON.stringify(view())}\n\n`);
   };
   const server = http.createServer(async (req, res) => {
     const host = `127.0.0.1:${server.address().port}`;
@@ -60,7 +64,7 @@ export function createApp({
       const url = new URL(req.url, origin);
       if (req.method === "GET" && url.pathname === "/api/state")
         return send(200, {
-          ...store.view(),
+          ...view(),
           token,
           codexEnabled: allowCodex,
           dshEnabled: allowDsh,
@@ -87,7 +91,7 @@ export function createApp({
           "Cache-Control": "no-cache",
           "Connection": "keep-alive",
         });
-        res.write(`data: ${JSON.stringify(store.view())}\n\n`);
+        res.write(`data: ${JSON.stringify(view())}\n\n`);
         clients.add(res);
         req.on("close", () => clients.delete(res));
         return;
@@ -134,12 +138,24 @@ export function createApp({
       )
         return send(403, { error: "Invalid session token" });
       let body = "";
+      let bodyBytes = 0;
       for await (const chunk of req) {
         body += chunk;
-        if (body.length > 32000)
+        bodyBytes += chunk.length;
+        if (bodyBytes > (url.pathname === "/api/import" ? 8 * 1024 * 1024 : 32000))
           return send(413, { error: "Request too large" });
       }
       const data = JSON.parse(body);
+      if (url.pathname === "/api/import") {
+        try {
+          store = restoreArchive(store, data.archive, { fault: data.fault });
+        } catch (error) {
+          if (error.restoreStore) store = error.restoreStore;
+          throw error;
+        }
+        broadcast();
+        return send(200, view());
+      }
       if (url.pathname === "/api/scenario") {
         const scenario = scenarioById.get(data.scenarioId);
         if (!scenario) throw Error("Unknown CUJ scenario");
@@ -182,7 +198,7 @@ export function createApp({
         }
         broadcast();
         return send(200, {
-          ...store.view(),
+          ...view(),
           selectedComponentId: scenario.selectedComponentId,
         });
       }
@@ -196,7 +212,7 @@ export function createApp({
           .components.find((c) => !beforeIds.has(c.id));
         broadcast();
         return send(200, {
-          ...store.view(),
+          ...view(),
           selectedComponentId: newCard?.id || data.componentId,
         });
       }
@@ -228,6 +244,17 @@ export function createApp({
           },
           "human",
         );
+      } else if (url.pathname.startsWith("/api/comment-lifecycle/")) {
+        changeComment(store, url.pathname.slice("/api/comment-lifecycle/".length), data);
+      } else if (url.pathname === "/api/proposal") {
+        try {
+          const decision = decideProposal(store, data);
+          broadcast();
+          return send(200, { ...view(), ...decision });
+        } catch (error) {
+          broadcast();
+          throw error;
+        }
       } else if (url.pathname === "/api/agent") {
         if (busy)
           return send(409, { error: "An agent proposal is already running" });
@@ -281,13 +308,10 @@ export function createApp({
                 actor: e.actor,
                 changes: e.payload.delta ? store.get(e.payload.delta) : [],
               })),
-            recentComments: store.events
-              .filter(
-                (e) =>
-                  e.type === "comment.created" && e.seq > scenarioBoundary,
-              )
+            recentComments: currentComments(store.events, scenarioBoundary)
+              .filter((comment) => !comment.resolved)
               .slice(-6)
-              .map((e) => e.payload),
+              .map(({ component_id, node_id, revision, text }) => ({ component_id, node_id, revision, text })),
           };
           if (Buffer.byteLength(JSON.stringify(input)) > 8000)
             throw Error(
@@ -374,13 +398,15 @@ export function createApp({
             proposal;
           await evalHooks.beforeAgentCommit?.({ data, input, proposal, store });
           validate(proposal);
-          store.commit({
-            state: proposal,
-            baseRevision,
-            commandId: data.commandId,
-            actor: "agent",
-            causedBy: [message.event_id],
-          });
+          if (data.reviewMode === "stage") {
+            const staged = stageProposal(store, { proposal, baseRevision, requestEventId: message.event_id });
+            return send(200, { ...view(), ...staged });
+          }
+          if (data.reviewMode !== undefined && data.reviewMode !== "commit")
+            throw Object.assign(Error("Invalid review mode"), { status: 400 });
+          if (store.revision !== baseRevision)
+            throw Object.assign(Error("The proposal is based on an older revision. Your edit is preserved; retry against the latest version."), { status: 409 });
+          store.commit({ state: proposal, baseRevision, commandId: data.commandId, actor: "agent", causedBy: [message.event_id] });
         } catch (error) {
           store.append("agent.failed", { message: error.message });
           throw error;
@@ -390,14 +416,14 @@ export function createApp({
         }
       } else return send(404, { error: "Not found" });
       broadcast();
-      return send(200, store.view());
+      return send(200, view());
     } catch (error) {
       send(error.status || 400, { error: error.message });
     }
   });
   return {
     server,
-    store,
+    get store() { return store; },
     close: () => {
       for (const client of clients) client.end();
       server.close();

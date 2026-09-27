@@ -12,6 +12,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 body {
   margin: 0;
 }
@@ -239,7 +242,7 @@ nav button.active {
   min-height: 320px;
   padding: 34px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
   align-items: center;
   gap: 22px;
 }
@@ -483,17 +486,16 @@ pre {
     height: auto;
     gap: 12px;
     align-items: flex-start;
+    flex-wrap: wrap;
   }
   .brand {
     font-size: 20px;
   }
   .header-right {
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 5px;
-  }
-  .header-right .button {
-    display: none;
+    width: 100%;
   }
   main {
     display: block;
@@ -507,6 +509,29 @@ pre {
   }
   .canvas-heading .pill {
     display: none;
+  }
+  .canvas-heading {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .canvas-heading > div {
+    flex-basis: 100%;
+  }
+  .composer-top select {
+    max-width: 100%;
+  }
+  .composer-top .pill {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .presets {
+    flex-wrap: wrap;
+  }
+  .event-row b,
+  .event-row em {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
   #canvas {
     padding: 24px;
