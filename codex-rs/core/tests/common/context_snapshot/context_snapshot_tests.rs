@@ -355,9 +355,14 @@ fn portable_tool_schema_normalizes_embedded_code_mode_shell_guidance() {
     let description = |shell: String, wait: &str| {
         format!("### `exec_command`\n{shell}\n\nexec tool declaration:\n```ts\n  // {wait}\n```")
     };
-    let nested = |description| {
+    let nested = |description: String| {
+        let shell_description = description
+            .strip_prefix("### `exec_command`\n")
+            .expect("embedded shell guidance")
+            .to_string();
         json!({ "type": "namespace", "name": "functions", "tools": [
-            { "type": "custom", "name": "exec", "description": description }
+            { "type": "custom", "name": "exec", "description": description },
+            { "type": "function", "name": "exec_command", "description": shell_description }
         ] })
     };
     let unix = nested(description(
@@ -699,7 +704,7 @@ fn detailed_permissions_normalize_paths_and_keep_policy_changes_visible() {
             "Some additional sandbox guidance. ".repeat(5)
         );
         let environment = format!(
-            "<environment_context>\n<cwd>{cwd}</cwd>\n<root>{external}</root>\n</environment_context>"
+            "<environment_context>\n<cwd>{cwd}</cwd>\n<filesystem><root>{external}</root><path>{external}</path><path>{cwd}{separator}{denied}</path></filesystem>\n</environment_context>"
         );
         let body = json!({"input": [
             {"type": "message", "role": "developer", "content": [{"type": "input_text", "text": permissions}]},

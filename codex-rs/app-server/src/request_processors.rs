@@ -366,6 +366,7 @@ use codex_core::read_head_for_summary;
 use codex_core::sandboxing::SandboxPermissions;
 use codex_core::truncate_rollout_after_turn_id;
 use codex_core::truncate_rollout_before_turn_id;
+use codex_core::validate_environment_ids_and_cwds;
 use codex_core::windows_sandbox::WindowsSandboxLevelExt;
 use codex_core::windows_sandbox::WindowsSandboxSetupMode as CoreWindowsSandboxSetupMode;
 use codex_core::windows_sandbox::WindowsSandboxSetupRequest;
@@ -472,7 +473,7 @@ use codex_rmcp_client::perform_oauth_login_return_url;
 use codex_rollout::InitialHistory;
 use codex_rollout::ResumedHistory;
 use codex_rollout::RolloutItem;
-use codex_rollout::is_persisted_rollout_item;
+use codex_rollout::persisted_rollout_item;
 use codex_rollout::state_db::StateDbHandle;
 use codex_rollout::state_db::reconcile_rollout;
 use codex_state::ThreadMetadata;
@@ -484,6 +485,7 @@ use codex_thread_store::DeleteThreadsParams as StoreDeleteThreadsParams;
 use codex_thread_store::GitInfoPatch as StoreGitInfoPatch;
 use codex_thread_store::ItemSortKey as StoreItemSortKey;
 use codex_thread_store::ListItemsParams as StoreListItemsParams;
+use codex_thread_store::ListItemsPosition as StoreListItemsPosition;
 use codex_thread_store::ListThreadsParams as StoreListThreadsParams;
 use codex_thread_store::ListTimelineParams as StoreListTimelineParams;
 use codex_thread_store::ListTurnsParams as StoreListTurnsParams;
@@ -540,10 +542,14 @@ mod bedrock_auth;
 mod catalog_processor;
 mod command_exec_processor;
 mod config_processor;
+#[cfg(test)]
+#[path = "request_processors/config_reload_tests.rs"]
+mod config_reload_tests;
 mod diagnostics;
 mod environment_processor;
 mod feedback_doctor_report;
 mod feedback_processor;
+mod feedback_rollout_history;
 mod feedback_thread_index;
 mod fs_processor;
 mod git_processor;
@@ -675,8 +681,7 @@ fn resolve_turn_environment_selections(
             config: EnvironmentConfigState::FromThread,
         });
     }
-    thread_manager
-        .validate_environment_selections(&selections)
+    validate_environment_ids_and_cwds(&thread_manager.environment_manager(), &selections)
         .map_err(environment_selection_error)?;
     Ok(Some(selections))
 }
@@ -717,8 +722,10 @@ pub(crate) use self::thread_summary::thread_settings_from_config_snapshot;
 pub(crate) fn build_legacy_api_turns_from_rollout_items(items: &[RolloutItem]) -> Vec<Turn> {
     let mut builder = ThreadHistoryBuilder::new();
     for item in items {
-        if is_persisted_rollout_item(item, codex_protocol::protocol::ThreadHistoryMode::Legacy) {
-            builder.handle_rollout_item(item);
+        if let Some(item) =
+            persisted_rollout_item(item, codex_protocol::protocol::ThreadHistoryMode::Legacy)
+        {
+            builder.handle_rollout_item(item.as_ref());
         }
     }
     builder.finish()

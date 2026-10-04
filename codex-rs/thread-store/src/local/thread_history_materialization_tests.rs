@@ -4,17 +4,25 @@ use std::path::Path;
 use std::time::Duration;
 
 use chrono::Utc;
+use codex_app_server_protocol::McpToolCallResult;
 use codex_app_server_protocol::ThreadItem;
 use codex_protocol::ThreadId;
 use codex_protocol::items::AgentMessageContent;
 use codex_protocol::items::AgentMessageItem;
+use codex_protocol::items::CommandExecutionItem;
+use codex_protocol::items::CommandExecutionStatus;
+use codex_protocol::items::McpToolCallItem;
+use codex_protocol::items::McpToolCallStatus;
 use codex_protocol::items::TurnItem;
 use codex_protocol::items::UserMessageItem;
+use codex_protocol::mcp::CallToolResult;
 use codex_protocol::models::BaseInstructions;
 use codex_protocol::models::ContentItem;
 use codex_protocol::models::MessagePhase;
 use codex_protocol::models::ResponseItem;
+use codex_protocol::parse_command::ParsedCommand;
 use codex_protocol::protocol::EventMsg;
+use codex_protocol::protocol::ExecCommandSource;
 use codex_protocol::protocol::HistoryPosition;
 use codex_protocol::protocol::ItemCompletedEvent;
 use codex_protocol::protocol::RateLimitSnapshot;
@@ -195,6 +203,7 @@ async fn split_homes_support_backfill_listing_and_paginated_history() {
 
     store
         .resume_thread(ResumeThreadParams {
+            history_revision: None,
             thread_id,
             rollout_path: Some(rollout_path),
             history: None,
@@ -434,6 +443,163 @@ WHERE thread_id = ?
 }
 
 #[tokio::test]
+async fn paginated_command_history_caps_aggregated_output() {
+    let home = TempDir::new().expect("temp dir");
+    let store = projection_store(home.path()).await;
+    let thread_id = ThreadId::default();
+    create_paginated_thread(&store, thread_id).await;
+    let output = format!("head\n{}\ntail", "x".repeat(128 * 1024));
+    let command = CommandExecutionItem {
+        sandbox_type: None,
+        model_context: None,
+        id: "exec-1".to_string(),
+        plugin_id: None,
+        script_path: None,
+        process_id: None,
+        command: vec!["echo".to_string(), "hello".to_string()],
+        cwd: home.path().abs().into(),
+        parsed_cmd: vec![ParsedCommand::Unknown {
+            cmd: "echo hello".to_string(),
+        }],
+        source: ExecCommandSource::Agent,
+        interaction_input: None,
+        status: CommandExecutionStatus::Completed,
+        aggregated_output: Some(output),
+        exit_code: Some(0),
+        duration: Some(Duration::from_millis(12)),
+    };
+
+    store
+        .append_items(AppendThreadItemsParams {
+            thread_id,
+            items: vec![
+                turn_started("turn-1"),
+                completed_item(thread_id, "turn-1", TurnItem::CommandExecution(command)),
+                turn_completed("turn-1"),
+            ],
+        })
+        .await
+        .expect("append command history");
+
+    let pool = codex_state::open_thread_history_db(&codex_state::SqliteConfig::new_for_testing(
+        home.path().abs(),
+    ))
+    .await
+    .expect("open thread history db");
+    let item_json = sqlx::query_scalar::<_, String>(
+        "SELECT item_json FROM thread_items WHERE thread_id = ? AND item_id = ?",
+    )
+    .bind(thread_id.to_string())
+    .bind("exec-1")
+    .fetch_one(&pool)
+    .await
+    .expect("read projected command");
+    let projected: ThreadItem =
+        serde_json::from_str(&item_json).expect("deserialize projected command");
+    let ThreadItem::CommandExecution {
+        aggregated_output: Some(output),
+        ..
+    } = projected
+    else {
+        panic!("expected projected command output");
+    };
+    assert_eq!(output.len(), 64 * 1024);
+    assert!(output.starts_with("head\n"));
+    assert!(output.ends_with("\ntail"));
+    assert!(output.contains("command output truncated for persistence"));
+}
+
+#[tokio::test]
+async fn paginated_mcp_history_caps_large_results() {
+    let home = TempDir::new().expect("temp dir");
+    let store = projection_store(home.path()).await;
+    let thread_id = ThreadId::default();
+    create_paginated_thread(&store, thread_id).await;
+    let arguments = serde_json::json!({"query": "large result"});
+    let tool_call = McpToolCallItem {
+        id: "mcp-1".to_string(),
+        server: "test".to_string(),
+        tool: "large_result".to_string(),
+        arguments: arguments.clone(),
+        connector_id: None,
+        mcp_app_resource_uri: None,
+        mcp_app_ui: None,
+        link_id: None,
+        app_name: None,
+        action_name: None,
+        plugin_id: None,
+        read_only_hint: None,
+        status: McpToolCallStatus::Failed,
+        result: Some(CallToolResult {
+            content: vec![serde_json::json!({
+                "type": "text",
+                "text": format!("head\n{}\ntail", "x".repeat(200_000)),
+            })],
+            structured_content: None,
+            is_error: Some(true),
+            meta: None,
+        }),
+        error: None,
+        duration: Some(Duration::from_millis(25)),
+    };
+
+    store
+        .append_items(AppendThreadItemsParams {
+            thread_id,
+            items: vec![
+                turn_started("turn-1"),
+                completed_item(thread_id, "turn-1", TurnItem::McpToolCall(tool_call)),
+                turn_completed("turn-1"),
+            ],
+        })
+        .await
+        .expect("append MCP history");
+
+    let pool = codex_state::open_thread_history_db(&codex_state::SqliteConfig::new_for_testing(
+        home.path().abs(),
+    ))
+    .await
+    .expect("open thread history db");
+    let item_json = sqlx::query_scalar::<_, String>(
+        "SELECT item_json FROM thread_items WHERE thread_id = ? AND item_id = ?",
+    )
+    .bind(thread_id.to_string())
+    .bind("mcp-1")
+    .fetch_one(&pool)
+    .await
+    .expect("read projected MCP tool call");
+    let projected: ThreadItem =
+        serde_json::from_str(&item_json).expect("deserialize projected MCP tool call");
+    let ThreadItem::McpToolCall {
+        arguments: projected_arguments,
+        result: Some(result),
+        ..
+    } = projected
+    else {
+        panic!("expected projected MCP tool call");
+    };
+    assert_eq!(projected_arguments, arguments);
+    let preview = result.content[0]["text"]
+        .as_str()
+        .expect("persisted MCP result preview");
+    assert_eq!(
+        *result,
+        McpToolCallResult {
+            content: vec![serde_json::json!({
+                "type": "text",
+                "text": preview,
+            })],
+            structured_content: None,
+            meta: None,
+        }
+    );
+    assert!(preview.len() < 65 * 1024);
+    assert!(preview.contains("head"));
+    assert!(preview.contains("chars truncated"));
+    assert!(preview.contains("tail"));
+}
+
+#[tokio::test]
 async fn paginated_realtime_items_materialize_separately_in_rollout_order() {
     let home = TempDir::new().expect("temp dir");
     let store = projection_store(home.path()).await;
@@ -583,6 +749,8 @@ async fn paginated_realtime_items_materialize_separately_in_rollout_order() {
     let legacy_thread_id = ThreadId::new();
     store
         .create_thread(CreateThreadParams {
+            creator_user_id: None,
+            creator_account_id: None,
             session_id: legacy_thread_id.into(),
             thread_id: legacy_thread_id,
             extra_config: None,
@@ -1089,6 +1257,7 @@ async fn paginated_fork_reads_compressed_shared_lineage_without_materializing() 
     fs::rename(&source_compressed_path, &external_path).expect("move shared source outside home");
     store
         .resume_thread(ResumeThreadParams {
+            history_revision: None,
             thread_id: source_thread_id,
             rollout_path: Some(external_path),
             history: None,
@@ -1380,6 +1549,57 @@ async fn subagent_prefix_advances_projection_without_materializing_history() {
     .expect("read projected realtime items");
     assert_eq!(realtime_items, vec![("child:started".to_string(), 6)]);
     assert_eq!(projection_state(&pool, thread_id).await.1, 9);
+}
+
+#[tokio::test]
+async fn projection_preserves_exact_lifecycle_timestamps() {
+    let home = TempDir::new().expect("temp dir");
+    let store = projection_store(home.path()).await;
+    let thread_id = ThreadId::default();
+    create_paginated_thread(&store, thread_id).await;
+    let timestamps = [
+        (Some(1_789_855_978_123), Some(1_789_855_979_456)),
+        (Some(1_789_855_978_123), Some(1_789_855_978_123)),
+        (None, Some(1_789_855_979_456)),
+        (None, None),
+    ];
+    let mut items = vec![turn_started("turn-1")];
+    for (index, (started_at_ms, completed_at_ms)) in timestamps.iter().enumerate() {
+        items.push(RolloutItem::EventMsg(EventMsg::ItemCompleted(
+            ItemCompletedEvent {
+                thread_id,
+                turn_id: "turn-1".to_string(),
+                item: TurnItem::UserMessage(UserMessageItem {
+                    id: format!("user-{index}"),
+                    client_id: None,
+                    content: Vec::new(),
+                }),
+                started_at_ms: *started_at_ms,
+                completed_at_ms: completed_at_ms.unwrap_or_default(),
+            },
+        )));
+    }
+    store
+        .append_items(AppendThreadItemsParams { thread_id, items })
+        .await
+        .expect("append lifecycle records");
+    store
+        .shutdown_thread(thread_id)
+        .await
+        .expect("shutdown thread");
+    let pool = codex_state::open_thread_history_db(&codex_state::SqliteConfig::new_for_testing(
+        home.path().abs(),
+    ))
+    .await
+    .expect("open thread history db");
+    let actual = sqlx::query_as::<_, (Option<i64>, Option<i64>)>(
+        "SELECT started_at_ms, completed_at_ms FROM thread_items WHERE thread_id = ? ORDER BY rollout_ordinal",
+    )
+    .bind(thread_id.to_string())
+    .fetch_all(&pool)
+    .await
+    .expect("read persisted lifecycle timestamps");
+    assert_eq!(actual, timestamps);
 }
 
 #[tokio::test]
@@ -2571,6 +2791,8 @@ async fn create_paginated_subagent_thread(
 ) {
     store
         .create_thread(CreateThreadParams {
+            creator_user_id: None,
+            creator_account_id: None,
             session_id: thread_id.into(),
             thread_id,
             extra_config: None,

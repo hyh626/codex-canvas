@@ -356,7 +356,7 @@ impl ThreadHistoryBuilder {
     /// tracking used by running thread resume/rejoin.
     ///
     /// This function should handle all EventMsg variants that can be persisted in a rollout file.
-    /// See `should_persist_event_msg` in `codex-rs/core/rollout/policy.rs`.
+    /// See `persisted_rollout_item` in `codex-rs/rollout/src/policy.rs`.
     pub fn handle_event(&mut self, event: &EventMsg) {
         match event {
             EventMsg::UserMessage(payload) => self.handle_user_message(payload),
@@ -1252,8 +1252,17 @@ impl ThreadHistoryBuilder {
     }
 
     fn handle_turn_aborted(&mut self, payload: &TurnAbortedEvent) {
+        let terminal_error = payload.error.as_ref().map(|error| V2TurnError {
+            message: error.message.clone(),
+            codex_error_info: error.codex_error_info.clone().map(Into::into),
+            misalignment: error.misalignment.clone().map(Into::into),
+            additional_details: None,
+        });
         let apply_abort = |turn: &mut PendingTurn| {
             turn.status = TurnStatus::Interrupted;
+            if let Some(error) = terminal_error.as_ref() {
+                turn.error = Some(error.clone());
+            }
             turn.completed_at = payload.completed_at;
             turn.duration_ms = payload.duration_ms;
             ThreadHistoryTurnMetadata::from_pending_turn(turn)
@@ -1267,10 +1276,7 @@ impl ThreadHistoryBuilder {
             }
 
             if let Some(turn) = self.turns.iter_mut().find(|turn| turn.id == turn_id) {
-                turn.status = TurnStatus::Interrupted;
-                turn.completed_at = payload.completed_at;
-                turn.duration_ms = payload.duration_ms;
-                let changed_turn = ThreadHistoryTurnMetadata::from_pending_turn(turn);
+                let changed_turn = apply_abort(turn);
                 self.record_changed_turn(changed_turn);
                 return;
             }
@@ -2391,6 +2397,7 @@ mod tests {
         }];
         let command_item = CoreTurnItem::CommandExecution(CoreCommandExecutionItem {
             model_context: None,
+            sandbox_type: None,
             id: "exec-1".to_string(),
             plugin_id: Some("sample@openai-curated".to_string()),
             script_path: Some("scripts/run.py".to_string()),
@@ -2401,12 +2408,9 @@ mod tests {
             source: ExecCommandSource::Agent,
             interaction_input: None,
             status: CoreCommandExecutionStatus::Completed,
-            stdout: Some("hello world\n".to_string()),
-            stderr: Some(String::new()),
             aggregated_output: Some("hello world\n".to_string()),
             exit_code: Some(0),
             duration: Some(Duration::from_millis(12)),
-            formatted_output: Some("hello world\n".to_string()),
         });
         let events = vec![
             EventMsg::TurnStarted(TurnStartedEvent {
@@ -2449,12 +2453,9 @@ mod tests {
                 parsed_cmd,
                 source: ExecCommandSource::Agent,
                 interaction_input: None,
-                stdout: "hello world\n".to_string(),
-                stderr: String::new(),
                 aggregated_output: "hello world\n".to_string(),
                 exit_code: 0,
                 duration: Duration::from_millis(12),
-                formatted_output: "hello world\n".to_string(),
                 status: CoreExecCommandStatus::Completed,
             }),
             EventMsg::TurnComplete(TurnCompleteEvent {
@@ -2477,6 +2478,7 @@ mod tests {
             build_turns_from_rollout_items(&items[..2])[0].items,
             vec![ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "exec-1".to_string(),
                 plugin_id: Some("sample@openai-curated".to_string()),
                 script_path: Some("scripts/run.py".to_string()),
@@ -2503,6 +2505,7 @@ mod tests {
             turns[0].items,
             vec![ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "exec-1".to_string(),
                 plugin_id: Some("sample@openai-curated".to_string()),
                 script_path: Some("scripts/run.py".to_string()),
@@ -2791,6 +2794,7 @@ mod tests {
                 turn_id: Some("turn-1".into()),
                 started_at: None,
                 reason: TurnAbortReason::Replaced,
+                error: None,
                 completed_at: None,
                 duration_ms: None,
             }),
@@ -3135,12 +3139,9 @@ mod tests {
                 }],
                 source: ExecCommandSource::Agent,
                 interaction_input: None,
-                stdout: String::new(),
-                stderr: String::new(),
                 aggregated_output: "hello world\n".into(),
                 exit_code: 0,
                 duration: Duration::from_millis(12),
-                formatted_output: String::new(),
                 status: CoreExecCommandStatus::Completed,
             }),
             EventMsg::McpToolCallEnd(McpToolCallEndEvent {
@@ -3191,6 +3192,7 @@ mod tests {
             turns[0].items[2],
             ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "exec-1".into(),
                 plugin_id: None,
                 script_path: None,
@@ -3428,12 +3430,9 @@ mod tests {
                 parsed_cmd: vec![ParsedCommand::Unknown { cmd: "ls".into() }],
                 source: ExecCommandSource::Agent,
                 interaction_input: None,
-                stdout: String::new(),
-                stderr: "exec command rejected by user".into(),
                 aggregated_output: "exec command rejected by user".into(),
                 exit_code: -1,
                 duration: Duration::ZERO,
-                formatted_output: String::new(),
                 status: CoreExecCommandStatus::Declined,
             }),
             EventMsg::PatchApplyEnd(PatchApplyEndEvent {
@@ -3465,6 +3464,7 @@ mod tests {
             turns[0].items[1],
             ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "exec-declined".into(),
                 plugin_id: None,
                 script_path: None,
@@ -3575,6 +3575,7 @@ mod tests {
             turns[0].items[1],
             ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "guardian-exec".into(),
                 plugin_id: Some("sample@openai-curated".into()),
                 script_path: Some("scripts/run.py".into()),
@@ -3649,6 +3650,7 @@ mod tests {
             turns[0].items[1],
             ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "guardian-execve".into(),
                 plugin_id: Some("sample@openai-curated".into()),
                 script_path: Some("scripts/run.py".into()),
@@ -3819,12 +3821,9 @@ mod tests {
                 }],
                 source: ExecCommandSource::Agent,
                 interaction_input: None,
-                stdout: "done\n".into(),
-                stderr: String::new(),
                 aggregated_output: "done\n".into(),
                 exit_code: 0,
                 duration: Duration::from_millis(5),
-                formatted_output: "done\n".into(),
                 status: CoreExecCommandStatus::Completed,
             }),
             EventMsg::TurnComplete(TurnCompleteEvent {
@@ -3852,6 +3851,7 @@ mod tests {
             turns[0].items[1],
             ThreadItem::CommandExecution {
                 model_context: None,
+                sandbox_type: None,
                 id: "exec-late".into(),
                 plugin_id: None,
                 script_path: None,
@@ -3928,12 +3928,9 @@ mod tests {
                 }],
                 source: ExecCommandSource::Agent,
                 interaction_input: None,
-                stdout: "done\n".into(),
-                stderr: String::new(),
                 aggregated_output: "done\n".into(),
                 exit_code: 0,
                 duration: Duration::from_millis(5),
-                formatted_output: "done\n".into(),
                 status: CoreExecCommandStatus::Completed,
             }),
             EventMsg::TurnComplete(TurnCompleteEvent {
@@ -4463,6 +4460,7 @@ mod tests {
                 turn_id: Some("turn-a".into()),
                 started_at: None,
                 reason: TurnAbortReason::Replaced,
+                error: None,
                 completed_at: None,
                 duration_ms: None,
             }),
@@ -4510,6 +4508,7 @@ mod tests {
                 window_id: None,
                 compaction_response_id: None,
                 latest_token_usage_record: None,
+                resume_metadata: None,
             }),
             RolloutItem::EventMsg(EventMsg::TurnComplete(TurnCompleteEvent {
                 turn_id: "turn-compact".into(),

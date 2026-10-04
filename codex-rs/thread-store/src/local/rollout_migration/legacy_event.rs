@@ -268,6 +268,7 @@ pub(super) fn completed_item(
         EventMsg::ExecCommandEnd(event) => Some((
             TurnItem::CommandExecution(CommandExecutionItem {
                 model_context: None,
+                sandbox_type: None,
                 id: event.call_id.clone(),
                 plugin_id: event.plugin_id.clone(),
                 script_path: event.script_path.clone(),
@@ -276,16 +277,12 @@ pub(super) fn completed_item(
                 cwd: event.cwd.clone(),
                 parsed_cmd: event.parsed_cmd.clone(),
                 source: event.source,
-                interaction_input: event.interaction_input.clone(),
+                interaction_input: None,
                 status: event.status.clone().into(),
-                stdout: (!event.stdout.is_empty()).then(|| event.stdout.clone()),
-                stderr: (!event.stderr.is_empty()).then(|| event.stderr.clone()),
                 aggregated_output: (!event.aggregated_output.is_empty())
                     .then(|| event.aggregated_output.clone()),
                 exit_code: Some(event.exit_code),
                 duration: Some(event.duration),
-                formatted_output: (!event.formatted_output.is_empty())
-                    .then(|| event.formatted_output.clone()),
             }),
             Some(event.turn_id.clone()),
         )),

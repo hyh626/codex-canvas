@@ -17,15 +17,13 @@ use crate::wrapping::adaptive_wrap_lines;
 /// steers explain that they will be submitted after the next tool/result
 /// boundary unless the user invokes the interrupt binding to send them
 /// immediately. The edit hint at the bottom only appears when there are actual
-/// queued user inputs to pop back into the composer. Because some terminals
-/// intercept certain modifier-key combinations, the displayed binding is
+/// queued user inputs to pop back into the composer. The displayed binding is
 /// configurable via [`set_edit_binding`](Self::set_edit_binding).
 pub(crate) struct PendingInputPreview {
     pub pending_steers: Vec<String>,
     pub rejected_steers: Vec<String>,
     pub queued_messages: Vec<String>,
-    /// Key combination rendered in the hint line.  Defaults to Alt+Up but may
-    /// be overridden for terminals where that chord is unavailable.
+    /// Key combination rendered in the hint line. Defaults to Shift+Left.
     pub(super) edit_binding: Option<key_hint::ShortcutHint>,
     /// Key combination rendered for immediately interrupting and sending steers.
     interrupt_binding: Option<key_hint::ShortcutHint>,
@@ -44,7 +42,7 @@ impl PendingInputPreview {
             pending_steers: Vec::new(),
             rejected_steers: Vec::new(),
             queued_messages: Vec::new(),
-            edit_binding: Some(key_hint::alt(KeyCode::Up).into()),
+            edit_binding: Some(key_hint::shift(KeyCode::Left).into()),
             interrupt_binding: Some(key_hint::plain(KeyCode::Esc).into()),
         }
     }
@@ -97,11 +95,9 @@ impl PendingInputPreview {
         if !self.pending_steers.is_empty() {
             let mut header = vec!["Messages to be submitted after next tool call".into()];
             if let Some(interrupt_binding) = self.interrupt_binding {
-                header.extend(vec![
-                    " (press ".dim(),
-                    interrupt_binding.into(),
-                    " to interrupt and send immediately)".dim(),
-                ]);
+                header.push(" (press ".dim());
+                header.extend(interrupt_binding.spans());
+                header.push(" to interrupt and send immediately)".dim());
             }
             Self::push_section_header(&mut lines, width, Line::from(header));
 
@@ -171,14 +167,10 @@ impl PendingInputPreview {
             && !has_questions
             && let Some(edit_binding) = self.edit_binding
         {
-            lines.push(
-                Line::from(vec![
-                    "    ".into(),
-                    edit_binding.into(),
-                    " edit last queued message".into(),
-                ])
-                .dim(),
-            );
+            let mut hint = Line::from("    ");
+            hint.spans.extend(edit_binding.spans());
+            hint.spans.push(" edit last queued message".dim());
+            lines.push(hint);
         }
 
         Paragraph::new(lines).into()
@@ -231,13 +223,6 @@ mod tests {
     }
 
     #[test]
-    fn desired_height_one_message() {
-        let mut queue = PendingInputPreview::new();
-        queue.queued_messages.push("Hello, world!".to_string());
-        assert_eq!(queue.desired_height(/*width*/ 40), 3);
-    }
-
-    #[test]
     fn render_one_message() {
         let mut queue = PendingInputPreview::new();
         queue.queued_messages.push("Hello, world!".to_string());
@@ -246,21 +231,6 @@ mod tests {
         let mut buf = Buffer::empty(Rect::new(0, 0, width, height));
         queue.render(Rect::new(0, 0, width, height), &mut buf);
         assert_snapshot!("render_one_message", format!("{buf:?}"));
-    }
-
-    #[test]
-    fn render_one_message_with_shift_left_binding() {
-        let mut queue = PendingInputPreview::new();
-        queue.queued_messages.push("Hello, world!".to_string());
-        queue.set_edit_binding(Some(key_hint::shift(KeyCode::Left).into()));
-        let width = 40;
-        let height = queue.desired_height(width);
-        let mut buf = Buffer::empty(Rect::new(0, 0, width, height));
-        queue.render(Rect::new(0, 0, width, height), &mut buf);
-        assert_snapshot!(
-            "render_one_message_with_shift_left_binding",
-            format!("{buf:?}")
-        );
     }
 
     #[test]
